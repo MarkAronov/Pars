@@ -1,0 +1,6 @@
+[submodule "Pars-Backend-Nodejs"]
+	path = Pars-Backend-Nodejs
+	url = https://github.com/markaronov/Pars-Backend-Nodejs.git
+[submodule "Pars-Frontend-React"]
+	path = Pars-Frontend-React
+	url = https://github.com/markaronov/Pars-Frontend-React.git

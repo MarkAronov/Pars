@@ -1,0 +1,18 @@
+{
+	"folders": [
+		{
+			"path": ".",
+		},
+		{
+			"path": "./Pars-Backend-Nodejs",
+		},
+		{
+			"path": "./Pars-Frontend-React",
+		}
+	],
+	"settings": {
+		"explorer.excludeGitIgnore": false,
+		"editor.formatOnSave": true,
+		"editor.formatOnType": true
+	}
+}

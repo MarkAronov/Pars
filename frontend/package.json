@@ -67,6 +67,7 @@
     "@tanstack/router-plugin": "^1.130.9",
     "@types/bun": "^1.2.19",
     "@types/react": "^19.1.9",
+    "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.7.0",
     "globals": "^16.3.0",
     "storybook": "^8",

@@ -1,29 +1,13 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable no-unused-vars */
-import PropTypes from 'prop-types';
+import { useParams } from '@tanstack/react-router';
 
-import { Container } from '@mui/material';
+const UserPage = () => {
+	const { username } = useParams({ strict: false });
 
-import UserCard from '../3-molecules/UserCard';
-
-/**
- * The user's page
- * @param {object} props object file that contains the user's name
- * @return {JSX.Element} returns a user page
- */
-const UserPage = (props) => {
-  const { username } = props;
-
-  return (
-    <Container>
-      <UserCard username={username} />
-    </Container>
-  );
+	return (
+		<main className="p-8">
+			<h1 className="text-2xl font-bold">{username ?? 'User'}</h1>
+		</main>
+	);
 };
-
-UserPage.propTypes = {
-  username: PropTypes.string.isRequired,
-};
-UserPage.displayName = `User's Page`;
 
 export default UserPage;

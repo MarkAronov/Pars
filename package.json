@@ -24,13 +24,5 @@
     "devDependencies": {
         "husky": "^9.0.0",
         "lint-staged": "^15.0.0"
-    },
-    "lint-staged": {
-        "backend/src/**/*.{ts,tsx}": [
-            "biome check --write"
-        ],
-        "frontend/src/**/*.{ts,tsx}": [
-            "biome check --write"
-        ]
     }
 }

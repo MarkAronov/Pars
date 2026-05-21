@@ -8,4 +8,4 @@ if [ -z "$SKIP_GITLEAKS" ]; then
 fi
 
 # Lint + format staged files
-bunx lint-staged
+bunx lint-staged --config .lintstagedrc.json

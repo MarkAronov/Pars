@@ -17,7 +17,7 @@
   ],
   "author": "Mark Aronov",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host 0.0.0.0",
     "build": "tsc -b && vite build",
     "lint": "biome lint ./src",
     "format": "biome format ./src --write",
@@ -31,7 +31,18 @@
     "test:coverage:watch": "vitest --reporter verbose --coverage --watch",
     "preview": "vite preview",
     "storybook": "storybook dev -p 6006",
-    "build:storybook": "storybook build"
+    "build:storybook": "storybook build",
+    "ui:update": "bunx shadcn@latest add --all --overwrite --yes",
+    "stories:generate": "bun run ./scripts/generate-stories.ts",
+    "stories:generate:force": "bun run ./scripts/generate-stories.ts --force",
+    "lighthouse": "node ./scripts/lighthouse-run.cjs",
+    "lighthouse:story": "node ./scripts/lighthouse-run.cjs http://localhost:6006",
+    "lighthouse:dev": "node ./scripts/lighthouse-run.cjs http://localhost:5173",
+    "axe": "node ./scripts/axe-run.cjs",
+    "axe:story": "node ./scripts/axe-run.cjs http://localhost:6006",
+    "axe:dev": "node ./scripts/axe-run.cjs http://localhost:5173",
+    "clean": "git clean -fdxn",
+    "clean:force": "git clean -fdx"
   },
   "dependencies": {
     "@biomejs/biome": "^2.1.3",

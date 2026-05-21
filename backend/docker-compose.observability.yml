@@ -1,0 +1,97 @@
+version: '3.9'
+
+services:
+  # ── GlitchTip (error tracking, Sentry-compatible) ─────────────────────────
+  glitchtip-postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: glitchtip
+      POSTGRES_USER: glitchtip
+      POSTGRES_PASSWORD: ${GLITCHTIP_DB_PASSWORD:-glitchtip}
+    volumes:
+      - glitchtip_postgres:/var/lib/postgresql/data
+
+  glitchtip:
+    image: glitchtip/glitchtip:latest
+    depends_on: [glitchtip-postgres]
+    ports:
+      - '8000:8000'
+    environment:
+      DATABASE_URL: postgres://glitchtip:${GLITCHTIP_DB_PASSWORD:-glitchtip}@glitchtip-postgres/glitchtip
+      SECRET_KEY: ${GLITCHTIP_SECRET:-changeme}
+      EMAIL_URL: consolemail://
+      GLITCHTIP_DOMAIN: http://localhost:8000
+
+  # ── Prometheus ────────────────────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    ports:
+      - '9090:9090'
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command: ['--config.file=/etc/prometheus/prometheus.yml', '--storage.tsdb.retention.time=15d']
+
+  # ── Loki ──────────────────────────────────────────────────────────────────
+  loki:
+    image: grafana/loki:3.1.0
+    ports:
+      - '3100:3100'
+    volumes:
+      - ./observability/loki.yml:/etc/loki/loki.yml:ro
+      - loki_data:/loki
+    command: ['-config.file=/etc/loki/loki.yml']
+
+  # ── Promtail ──────────────────────────────────────────────────────────────
+  promtail:
+    image: grafana/promtail:3.1.0
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./observability/promtail.yml:/etc/promtail/promtail.yml:ro
+    command: ['-config.file=/etc/promtail/promtail.yml']
+
+  # ── Grafana ───────────────────────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana:11.1.0
+    ports:
+      - '3001:3000'
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+    volumes:
+      - ./observability/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+      - grafana_data:/var/lib/grafana
+
+  # ── Umami (privacy-first analytics) ──────────────────────────────────────
+  umami-postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: umami
+      POSTGRES_USER: umami
+      POSTGRES_PASSWORD: ${UMAMI_DB_PASSWORD:-umami}
+    volumes:
+      - umami_postgres:/var/lib/postgresql/data
+
+  umami:
+    image: ghcr.io/umami-software/umami:postgresql-latest
+    depends_on: [umami-postgres]
+    ports:
+      - '3002:3000'
+    environment:
+      DATABASE_URL: postgresql://umami:${UMAMI_DB_PASSWORD:-umami}@umami-postgres:5432/umami
+
+  # ── Uptime Kuma ───────────────────────────────────────────────────────────
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    ports:
+      - '3003:3001'
+    volumes:
+      - uptime_kuma_data:/app/data
+
+volumes:
+  glitchtip_postgres:
+  prometheus_data:
+  loki_data:
+  grafana_data:
+  umami_postgres:
+  uptime_kuma_data:

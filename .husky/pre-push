@@ -4,33 +4,33 @@
 echo "Running pre-push checks..."
 
 # Backend checks
-if [ -d "Pars-Backend-Nodejs" ]; then
+if [ -d "backend" ]; then
   echo "→ Backend: type check"
-  (cd Pars-Backend-Nodejs && bunx tsc --noEmit) || exit 1
+  (cd backend && bunx tsc --noEmit) || exit 1
 
   echo "→ Backend: tests"
-  (cd Pars-Backend-Nodejs && bun test) || exit 1
+  (cd backend && bun test) || exit 1
 
   echo "→ Backend: build"
-  (cd Pars-Backend-Nodejs && bun run build) || exit 1
+  (cd backend && bun run build) || exit 1
 fi
 
 # Frontend checks
-if [ -d "Pars-Frontend-React" ]; then
+if [ -d "frontend" ]; then
   echo "→ Frontend: type check"
-  (cd Pars-Frontend-React && bunx tsc --noEmit) || exit 1
+  (cd frontend && bunx tsc --noEmit) || exit 1
 
   echo "→ Frontend: build"
-  (cd Pars-Frontend-React && bun run build) || exit 1
+  (cd frontend && bun run build) || exit 1
 fi
 
 # Full security checks (opt-in)
 if [ "$FULL_PRE_PUSH" = "1" ]; then
   echo "→ Security: bun audit (backend)"
-  (cd Pars-Backend-Nodejs && bun audit) || true
+  (cd backend && bun audit) || true
 
   echo "→ Security: bun audit (frontend)"
-  (cd Pars-Frontend-React && bun audit) || true
+  (cd frontend && bun audit) || true
 
   if command -v gitleaks > /dev/null 2>&1; then
     echo "→ Security: gitleaks full scan"

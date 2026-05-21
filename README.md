@@ -27,8 +27,8 @@ Pars is a privacy-first social media platform built for people who want meaningf
 
 ```
 Pars/
-├── Pars-Backend-Nodejs/   # NestJS backend (submodule → MarkAronov/Pars-Backend-Nodejs)
-├── Pars-Frontend-React/   # React frontend (submodule → MarkAronov/Pars-Frontend-React)
+├── backend/   # NestJS backend (submodule → MarkAronov/backend)
+├── frontend/   # React frontend (submodule → MarkAronov/frontend)
 ├── .github/               # Workflows, issue templates, Copilot instructions
 ├── .husky/                # Git hooks
 ├── LICENSE
@@ -57,7 +57,7 @@ cd Pars
 ### Backend
 
 ```bash
-cd Pars-Backend-Nodejs
+cd backend
 cp env/.env.example env/.env.development
 docker compose up -d          # PostgreSQL, Redis, RabbitMQ, Kafka
 bun install
@@ -68,7 +68,7 @@ bun run dev
 ### Frontend
 
 ```bash
-cd Pars-Frontend-React
+cd frontend
 cp env/.env.example env/.env.local
 bun install
 bun run dev

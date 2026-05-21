@@ -7,14 +7,14 @@
     "license": "MIT",
     "scripts": {
         "prepare": "husky",
-        "dev:backend": "cd Pars-Backend-Nodejs && bun run dev",
-        "dev:frontend": "cd Pars-Frontend-React && bun run dev",
-        "test:backend": "cd Pars-Backend-Nodejs && bun test",
-        "test:frontend": "cd Pars-Frontend-React && bun test",
-        "build:backend": "cd Pars-Backend-Nodejs && bun run build",
-        "build:frontend": "cd Pars-Frontend-React && bun run build",
-        "lint:backend": "cd Pars-Backend-Nodejs && bun run lint",
-        "lint:frontend": "cd Pars-Frontend-React && bun run lint",
+        "dev:backend": "cd backend && bun run dev",
+        "dev:frontend": "cd frontend && bun run dev",
+        "test:backend": "cd backend && bun test",
+        "test:frontend": "cd frontend && bun test",
+        "build:backend": "cd backend && bun run build",
+        "build:frontend": "cd frontend && bun run build",
+        "lint:backend": "cd backend && bun run lint",
+        "lint:frontend": "cd frontend && bun run lint",
         "push:full": "FULL_PRE_PUSH=1 git push",
         "push:partial": "git commit --allow-empty -m 'chore: trigger partial CI [run-partial]' && git push",
         "security:gitleaks:docker": "docker run --rm -v \"$(pwd)\":/repo -w /repo ghcr.io/gitleaks/gitleaks:latest detect --verbose --redact",
@@ -26,10 +26,10 @@
         "lint-staged": "^15.0.0"
     },
     "lint-staged": {
-        "Pars-Backend-Nodejs/src/**/*.{ts,tsx}": [
+        "backend/src/**/*.{ts,tsx}": [
             "biome check --write"
         ],
-        "Pars-Frontend-React/src/**/*.{ts,tsx}": [
+        "frontend/src/**/*.{ts,tsx}": [
             "biome check --write"
         ]
     }

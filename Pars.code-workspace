@@ -4,10 +4,10 @@
 			"path": ".",
 		},
 		{
-			"path": "./Pars-Backend-Nodejs",
+			"path": "./backend",
 		},
 		{
-			"path": "./Pars-Frontend-React",
+			"path": "./frontend",
 		}
 	],
 	"settings": {

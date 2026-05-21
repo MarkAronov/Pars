@@ -42,10 +42,10 @@ jobs:
         with:
           filters: |
             backend:
-              - 'Pars-Backend-Nodejs/**'
+              - 'backend/**'
               - '.github/workflows/**'
             frontend:
-              - 'Pars-Frontend-React/**'
+              - 'frontend/**'
               - '.github/workflows/**'
 
   # ------------------------------------------------------------------
@@ -83,11 +83,10 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: Pars-Backend-Nodejs
+        working-directory: backend
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: recursive
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
@@ -110,11 +109,10 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: Pars-Frontend-React
+        working-directory: frontend
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: recursive
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
@@ -136,11 +134,10 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: Pars-Frontend-React
+        working-directory: frontend
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: recursive
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
@@ -149,5 +146,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: storybook-static
-          path: Pars-Frontend-React/storybook-static
+          path: frontend/storybook-static
           retention-days: 7

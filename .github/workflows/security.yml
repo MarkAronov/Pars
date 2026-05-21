@@ -4,9 +4,9 @@ on:
   push:
     branches: ["main", "develop"]
     paths:
-      - "Pars-Backend-Nodejs/Dockerfile"
-      - "Pars-Backend-Nodejs/src/**"
-      - "Pars-Frontend-React/src/**"
+      - "backend/Dockerfile"
+      - "backend/src/**"
+      - "frontend/src/**"
       - ".github/workflows/security.yml"
   pull_request:
     branches: ["main"]
@@ -84,7 +84,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          submodules: recursive
       - uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -101,10 +100,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: recursive
       - name: Build Docker image
         run: docker build -t pars-backend:${{ github.sha }} .
-        working-directory: Pars-Backend-Nodejs
+        working-directory: backend
       - name: Trivy filesystem scan
         uses: aquasecurity/trivy-action@master
         with:
@@ -142,7 +140,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: recursive
       - uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
@@ -163,7 +160,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: recursive
       - uses: actions/dependency-review-action@v4
         with:
           fail-on-severity: moderate
@@ -181,7 +177,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: recursive
       - name: Setup Nuclei
         uses: projectdiscovery/setup-nuclei@v3
         with:

@@ -51,7 +51,7 @@
   "devDependencies": {
     "@storybook/addon-essentials": "^8",
     "@storybook/blocks": "^8",
-    "@storybook/react": "^8",
+    "@storybook/react": "^10",
     "@storybook/react-vite": "^8",
     "@tanstack/router-plugin": "^1.130.9",
     "@types/bun": "^1.2.19",

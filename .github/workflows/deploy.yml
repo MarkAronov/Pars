@@ -1,0 +1,118 @@
+name: "Deploy"
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+    inputs:
+      skip-deploy:
+        description: "Skip deploy steps"
+        required: false
+        default: "false"
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  # ------------------------------------------------------------------
+  # FLAG PARSING
+  # ------------------------------------------------------------------
+  flags:
+    name: Determine Flags
+    runs-on: ubuntu-latest
+    outputs:
+      skip_deploy: ${{ steps.set.outputs.skip_deploy }}
+    steps:
+      - name: Set flags
+        id: set
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const msg = (context.payload.head_commit && context.payload.head_commit.message) || ''
+            const inps = context.payload.inputs || {}
+            const has = (token, key) => (msg && msg.includes(token)) || (inps[key] === 'true')
+            return { skip_deploy: has('[skip-deploy]', 'skip-deploy') ? 'true' : 'false' }
+
+  # ------------------------------------------------------------------
+  # BACKEND DEPLOY — Fly.io
+  # ------------------------------------------------------------------
+  deploy-backend:
+    needs: flags
+    if: ${{ needs.flags.outputs.skip_deploy != 'true' }}
+    name: Deploy Backend to Fly.io
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - name: Deploy to Fly.io
+        run: flyctl deploy --remote-only
+        working-directory: Pars-Backend-Nodejs
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+  # ------------------------------------------------------------------
+  # FRONTEND DEPLOY — Vercel
+  # ------------------------------------------------------------------
+  deploy-frontend:
+    needs: flags
+    if: ${{ needs.flags.outputs.skip_deploy != 'true' }}
+    name: Deploy Frontend to Vercel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install
+        working-directory: Pars-Frontend-React
+      - run: bun run build
+        working-directory: Pars-Frontend-React
+        env:
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: Pars-Frontend-React
+          vercel-args: "--prod"
+
+  # ------------------------------------------------------------------
+  # STORYBOOK DEPLOY — GitHub Pages
+  # ------------------------------------------------------------------
+  deploy-storybook:
+    needs: flags
+    if: ${{ needs.flags.outputs.skip_deploy != 'true' }}
+    name: Deploy Storybook to GitHub Pages
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    concurrency:
+      group: "pages"
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install
+        working-directory: Pars-Frontend-React
+      - run: bun run build:storybook
+        working-directory: Pars-Frontend-React
+      - uses: actions/configure-pages@v4
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: Pars-Frontend-React/storybook-static
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

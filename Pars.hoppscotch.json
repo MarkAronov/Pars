@@ -1,0 +1,665 @@
+{
+    "v": 7,
+    "name": "Pars API",
+    "folders": [
+        {
+            "v": 1,
+            "id": "auth",
+            "name": "Auth",
+            "folders": [],
+            "requests": [
+                {
+                    "v": "3",
+                    "id": "auth-signup",
+                    "name": "Sign Up",
+                    "method": "POST",
+                    "endpoint": "<<baseUrl>>/api/auth/sign-up/email",
+                    "headers": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json",
+                            "active": true
+                        }
+                    ],
+                    "params": [],
+                    "auth": {
+                        "authType": "none",
+                        "authActive": false
+                    },
+                    "body": {
+                        "contentType": "application/json",
+                        "body": "{\"name\":\"Test User\",\"email\":\"test@example.com\",\"password\":\"Password123@\"}"
+                    },
+                    "requestVariables": []
+                },
+                {
+                    "v": "3",
+                    "id": "auth-signin",
+                    "name": "Sign In",
+                    "method": "POST",
+                    "endpoint": "<<baseUrl>>/api/auth/sign-in/email",
+                    "headers": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json",
+                            "active": true
+                        }
+                    ],
+                    "params": [],
+                    "auth": {
+                        "authType": "none",
+                        "authActive": false
+                    },
+                    "body": {
+                        "contentType": "application/json",
+                        "body": "{\"email\":\"test@example.com\",\"password\":\"Password123@\"}"
+                    },
+                    "requestVariables": []
+                },
+                {
+                    "v": "3",
+                    "id": "auth-signout",
+                    "name": "Sign Out",
+                    "method": "POST",
+                    "endpoint": "<<baseUrl>>/api/auth/sign-out",
+                    "headers": [],
+                    "params": [],
+                    "auth": {
+                        "authType": "none",
+                        "authActive": false
+                    },
+                    "body": {
+                        "contentType": null,
+                        "body": null
+                    },
+                    "requestVariables": []
+                }
+            ]
+        },
+        {
+            "v": 1,
+            "id": "users",
+            "name": "Users",
+            "folders": [],
+            "requests": [
+                {
+                    "v": "3",
+                    "id": "users-list",
+                    "name": "List Users",
+                    "method": "GET",
+                    "endpoint": "<<baseUrl>>/api/users",
+                    "headers": [],
+                    "params": [
+                        {
+                            "key": "page",
+                            "value": "1",
+                            "active": true
+                        },
+                        {
+                            "key": "limit",
+                            "value": "20",
+                            "active": true
+                        }
+                    ],
+                    "auth": {
+                        "authType": "none",
+                        "authActive": false
+                    },
+                    "body": {
+                        "contentType": null,
+                        "body": null
+                    },
+                    "requestVariables": []
+                },
+                {
+                    "v": "3",
+                    "id": "users-me",
+                    "name": "Get Self",
+                    "method": "GET",
+                    "endpoint": "<<baseUrl>>/api/users/me",
+                    "headers": [],
+                    "params": [],
+                    "auth": {
+                        "authType": "none",
+                        "authActive": false
+                    },
+                    "body": {
+                        "contentType": null,
+                        "body": null
+                    },
+                    "requestVariables": []
+                },
+                {
+                    "v": "3",
+                    "id": "users-get",
+                    "name": "Get User",
+                    "method": "GET",
+                    "endpoint": "<<baseUrl>>/api/users/<<userId>>",
+                    "headers": [],
+                    "params": [],
+                    "auth": {
+                        "authType": "none",
+                        "authActive": false
+                    },
+                    "body": {
+                        "contentType": null,
+                        "body": null
+                    },
+                    "requestVariables": [
+                        {
+                            "key": "userId",
+                            "value": ""
+                        }
+                    ]
+                },
+                {
+                    "v": "3",
+                    "id": "users-patch-regular",
+                    "name": "Update Profile",
+                    "method": "PATCH",
+                    "endpoint": "<<baseUrl>>/api/users/me",
+                    "headers": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json",
+                            "active": true
+                        }
+                    ],
+                    "params": [],
+                    "auth": {
+                        "authType": "none",
+                        "authActive": false
+                    },
+                    "body": {
+                        "contentType": "application/json",
+                        "body": "{\"displayName\":\"New Name\",\"bio\":\"Updated bio\"}"
+                    },
+                    "requestVariables": []
+                },
+                {
+                    "v": "3",
+                    "id": "users-patch-important",
+                    "name": "Update Username / Email",
+                    "method": "PATCH",
+                    "endpoint": "<<baseUrl>>/api/users/me/important",
+                    "headers": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json",
+                            "active": true
+                        }
+                    ],
+                    "params": [],
+                    "auth": {
+                        "authType": "none",
+                        "authActive": false
+                    },
+                    "body": {
+                        "contentType": "application/json",
+                        "body": "{\"username\":\"newusername\",\"currentPassword\":\"Password123@\"}"
+                    },
+                    "requestVariables": []
+                },
+                {
+                    "v": "3",
+                    "id": "users-patch-password",
+                    "name": "Change Password",
+                    "method": "PATCH",
+                    "endpoint": "<<baseUrl>>/api/users/me/password",
+                    "headers": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json",
+                            "active": true
+                        }
+                    ],
+                    "params": [],
+                    "auth": {
+                        "authType": "none",
+                        "authActive": false
+                    },
+                    "body": {
+                        "contentType": "application/json",
+                        "body": "{\"currentPassword\":\"Password123@\",\"newPassword\":\"NewPassword456@\"}"
+                    },
+                    "requestVariables": []
+                },
+                {
+                    "v": "3",
+                    "id": "users-delete-self",
+                    "name": "Delete Self",
+                    "method": "DELETE",
+                    "endpoint": "<<baseUrl>>/api/users/me",
+                    "headers": [],
+                    "params": [],
+                    "auth": {
+                        "authType": "none",
+                        "authActive": false
+                    },
+                    "body": {
+                        "contentType": null,
+                        "body": null
+                    },
+                    "requestVariables": []
+                }
+            ]
+        },
+        {
+            "v": 1,
+            "id": "posts",
+            "name": "Posts",
+            "folders": [],
+            "requests": [
+                {
+                    "v": "3",
+                    "id": "posts-list",
+                    "name": "List Posts",
+                    "method": "GET",
+                    "endpoint": "<<baseUrl>>/api/posts",
+                    "headers": [],
+                    "params": [
+                        {
+                            "key": "page",
+                            "value": "1",
+                            "active": true
+                        },
+                        {
+                            "key": "limit",
+                            "value": "20",
+                            "active": true
+                        }
+                    ],
+                    "auth": {
+                        "authType": "none",
+                        "authActive": false
+                    },
+                    "body": {
+                        "contentType": null,
+                        "body": null
+                    },
+                    "requestVariables": []
+                },
+                {
+                    "v": "3",
+                    "id": "posts-get",
+                    "name": "Get Post",
+                    "method": "GET",
+                    "endpoint": "<<baseUrl>>/api/posts/<<postId>>",
+                    "headers": [],
+                    "params": [],
+                    "auth": {
+                        "authType": "none",
+                        "authActive": false
+                    },
+                    "body": {
+                        "contentType": null,
+                        "body": null
+                    },
+                    "requestVariables": [
+                        {
+                            "key": "postId",
+                            "value": ""
+                        }
+                    ]
+                },
+                {
+                    "v": "3",
+                    "id": "posts-create",
+                    "name": "Create Post",
+                    "method": "POST",
+                    "endpoint": "<<baseUrl>>/api/posts",
+                    "headers": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json",
+                            "active": true
+                        }
+                    ],
+                    "params": [],
+                    "auth": {
+                        "authType": "none",
+                        "authActive": false
+                    },
+                    "body": {
+                        "contentType": "application/json",
+                        "body": "{\"title\":\"My first post\",\"content\":\"Hello world!\"}"
+                    },
+                    "requestVariables": []
+                },
+                {
+                    "v": "3",
+                    "id": "posts-patch",
+                    "name": "Edit Post",
+                    "method": "PATCH",
+                    "endpoint": "<<baseUrl>>/api/posts/<<postId>>",
+                    "headers": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json",
+                            "active": true
+                        }
+                    ],
+                    "params": [],
+                    "auth": {
+                        "authType": "none",
+                        "authActive": false
+                    },
+                    "body": {
+                        "contentType": "application/json",
+                        "body": "{\"content\":\"Edited content.\"}"
+                    },
+                    "requestVariables": [
+                        {
+                            "key": "postId",
+                            "value": ""
+                        }
+                    ]
+                },
+                {
+                    "v": "3",
+                    "id": "posts-delete",
+                    "name": "Delete Post",
+                    "method": "DELETE",
+                    "endpoint": "<<baseUrl>>/api/posts/<<postId>>",
+                    "headers": [],
+                    "params": [],
+                    "auth": {
+                        "authType": "none",
+                        "authActive": false
+                    },
+                    "body": {
+                        "contentType": null,
+                        "body": null
+                    },
+                    "requestVariables": [
+                        {
+                            "key": "postId",
+                            "value": ""
+                        }
+                    ]
+                },
+                {
+                    "v": "3",
+                    "id": "posts-like",
+                    "name": "Toggle Like",
+                    "method": "POST",
+                    "endpoint": "<<baseUrl>>/api/posts/<<postId>>/like",
+                    "headers": [],
+                    "params": [],
+                    "auth": {
+                        "authType": "none",
+                        "authActive": false
+                    },
+                    "body": {
+                        "contentType": null,
+                        "body": null
+                    },
+                    "requestVariables": [
+                        {
+                            "key": "postId",
+                            "value": ""
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "v": 1,
+            "id": "threads",
+            "name": "Threads",
+            "folders": [],
+            "requests": [
+                {
+                    "v": "3",
+                    "id": "threads-create",
+                    "name": "Create Thread",
+                    "method": "POST",
+                    "endpoint": "<<baseUrl>>/api/threads",
+                    "headers": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json",
+                            "active": true
+                        }
+                    ],
+                    "params": [],
+                    "auth": {
+                        "authType": "none",
+                        "authActive": false
+                    },
+                    "body": {
+                        "contentType": "application/json",
+                        "body": "{\"title\":\"New Thread\",\"topicId\":\"<<topicId>>\"}"
+                    },
+                    "requestVariables": [
+                        {
+                            "key": "topicId",
+                            "value": ""
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "v": 1,
+            "id": "topics",
+            "name": "Topics",
+            "folders": [],
+            "requests": [
+                {
+                    "v": "3",
+                    "id": "topics-list",
+                    "name": "List Topics",
+                    "method": "GET",
+                    "endpoint": "<<baseUrl>>/api/topics",
+                    "headers": [],
+                    "params": [],
+                    "auth": {
+                        "authType": "none",
+                        "authActive": false
+                    },
+                    "body": {
+                        "contentType": null,
+                        "body": null
+                    },
+                    "requestVariables": []
+                },
+                {
+                    "v": "3",
+                    "id": "topics-create",
+                    "name": "Create Topic (mod+)",
+                    "method": "POST",
+                    "endpoint": "<<baseUrl>>/api/topics",
+                    "headers": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json",
+                            "active": true
+                        }
+                    ],
+                    "params": [],
+                    "auth": {
+                        "authType": "none",
+                        "authActive": false
+                    },
+                    "body": {
+                        "contentType": "application/json",
+                        "body": "{\"name\":\"Technology\",\"description\":\"Tech discussions\"}"
+                    },
+                    "requestVariables": []
+                }
+            ]
+        },
+        {
+            "v": 1,
+            "id": "search",
+            "name": "Search",
+            "folders": [],
+            "requests": [
+                {
+                    "v": "3",
+                    "id": "search-all",
+                    "name": "Search All",
+                    "method": "GET",
+                    "endpoint": "<<baseUrl>>/api/search",
+                    "headers": [],
+                    "params": [
+                        {
+                            "key": "q",
+                            "value": "hello",
+                            "active": true
+                        },
+                        {
+                            "key": "type",
+                            "value": "all",
+                            "active": true
+                        },
+                        {
+                            "key": "page",
+                            "value": "1",
+                            "active": true
+                        },
+                        {
+                            "key": "limit",
+                            "value": "20",
+                            "active": true
+                        }
+                    ],
+                    "auth": {
+                        "authType": "none",
+                        "authActive": false
+                    },
+                    "body": {
+                        "contentType": null,
+                        "body": null
+                    },
+                    "requestVariables": []
+                }
+            ]
+        },
+        {
+            "v": 1,
+            "id": "feed",
+            "name": "Feed",
+            "folders": [],
+            "requests": [
+                {
+                    "v": "3",
+                    "id": "feed-get",
+                    "name": "Get Feed",
+                    "method": "GET",
+                    "endpoint": "<<baseUrl>>/api/feed",
+                    "headers": [],
+                    "params": [
+                        {
+                            "key": "page",
+                            "value": "1",
+                            "active": true
+                        },
+                        {
+                            "key": "limit",
+                            "value": "20",
+                            "active": true
+                        }
+                    ],
+                    "auth": {
+                        "authType": "none",
+                        "authActive": false
+                    },
+                    "body": {
+                        "contentType": null,
+                        "body": null
+                    },
+                    "requestVariables": []
+                }
+            ]
+        },
+        {
+            "v": 1,
+            "id": "media",
+            "name": "Media",
+            "folders": [],
+            "requests": [
+                {
+                    "v": "3",
+                    "id": "media-avatar",
+                    "name": "Upload Avatar",
+                    "method": "POST",
+                    "endpoint": "<<baseUrl>>/api/media/avatar",
+                    "headers": [],
+                    "params": [],
+                    "auth": {
+                        "authType": "none",
+                        "authActive": false
+                    },
+                    "body": {
+                        "contentType": "multipart/form-data",
+                        "body": [
+                            {
+                                "key": "file",
+                                "value": ""
+                            }
+                        ]
+                    },
+                    "requestVariables": []
+                },
+                {
+                    "v": "3",
+                    "id": "media-background",
+                    "name": "Upload Background",
+                    "method": "POST",
+                    "endpoint": "<<baseUrl>>/api/media/background",
+                    "headers": [],
+                    "params": [],
+                    "auth": {
+                        "authType": "none",
+                        "authActive": false
+                    },
+                    "body": {
+                        "contentType": "multipart/form-data",
+                        "body": [
+                            {
+                                "key": "file",
+                                "value": ""
+                            }
+                        ]
+                    },
+                    "requestVariables": []
+                }
+            ]
+        },
+        {
+            "v": 1,
+            "id": "misc",
+            "name": "Misc",
+            "folders": [],
+            "requests": [
+                {
+                    "v": "3",
+                    "id": "health",
+                    "name": "Health Check",
+                    "method": "GET",
+                    "endpoint": "<<baseUrl>>/health",
+                    "headers": [],
+                    "params": [],
+                    "auth": {
+                        "authType": "none",
+                        "authActive": false
+                    },
+                    "body": {
+                        "contentType": null,
+                        "body": null
+                    },
+                    "requestVariables": []
+                }
+            ]
+        }
+    ],
+    "environments": [],
+    "variables": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:3000"
+        }
+    ]
+}

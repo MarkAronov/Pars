@@ -1,0 +1,36 @@
+{
+    "name": "pars",
+    "version": "1.0.0",
+    "private": true,
+    "description": "Pars — a privacy-first social media platform",
+    "author": "Mark Aronov",
+    "license": "MIT",
+    "scripts": {
+        "prepare": "husky",
+        "dev:backend": "cd Pars-Backend-Nodejs && bun run dev",
+        "dev:frontend": "cd Pars-Frontend-React && bun run dev",
+        "test:backend": "cd Pars-Backend-Nodejs && bun test",
+        "test:frontend": "cd Pars-Frontend-React && bun test",
+        "build:backend": "cd Pars-Backend-Nodejs && bun run build",
+        "build:frontend": "cd Pars-Frontend-React && bun run build",
+        "lint:backend": "cd Pars-Backend-Nodejs && bun run lint",
+        "lint:frontend": "cd Pars-Frontend-React && bun run lint",
+        "push:full": "FULL_PRE_PUSH=1 git push",
+        "push:partial": "git commit --allow-empty -m 'chore: trigger partial CI [run-partial]' && git push",
+        "security:gitleaks:docker": "docker run --rm -v \"$(pwd)\":/repo -w /repo ghcr.io/gitleaks/gitleaks:latest detect --verbose --redact",
+        "security:trivy:docker": "docker run --rm -v \"$(pwd)\":/workspace aquasec/trivy:latest fs /workspace --severity CRITICAL,HIGH",
+        "security:nuclei:docker": "docker run --rm -v \"$(pwd)/security/nuclei-templates\":/templates projectdiscovery/nuclei:latest -u http://host.docker.internal:3000 -t /templates -severity high,critical"
+    },
+    "devDependencies": {
+        "husky": "^9.0.0",
+        "lint-staged": "^15.0.0"
+    },
+    "lint-staged": {
+        "Pars-Backend-Nodejs/src/**/*.{ts,tsx}": [
+            "biome check --write"
+        ],
+        "Pars-Frontend-React/src/**/*.{ts,tsx}": [
+            "biome check --write"
+        ]
+    }
+}

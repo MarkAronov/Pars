@@ -1,0 +1,27 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/Pars-Backend-Nodejs"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "backend"
+
+  - package-ecosystem: "npm"
+    directory: "/Pars-Frontend-React"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "frontend"
+
+  - package-ecosystem: "docker"
+    directory: "/Pars-Backend-Nodejs"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "docker"

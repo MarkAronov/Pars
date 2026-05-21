@@ -1,0 +1,153 @@
+name: "CI/CD Pipeline"
+
+on:
+  push:
+    branches: ["main", "develop", "feat/*", "fix/*", "chore/*"]
+  pull_request:
+    branches: ["main", "develop"]
+  workflow_dispatch:
+    inputs:
+      run-full:
+        description: "Run the full pipeline regardless of changed paths"
+        required: false
+        default: "false"
+      run-partial:
+        description: "Run only CI, skip deploy"
+        required: false
+        default: "false"
+      skip-backend:
+        description: "Skip backend jobs"
+        required: false
+        default: "false"
+      skip-frontend:
+        description: "Skip frontend jobs"
+        required: false
+        default: "false"
+
+jobs:
+  # ------------------------------------------------------------------
+  # CHANGE DETECTION
+  # ------------------------------------------------------------------
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'Pars-Backend-Nodejs/**'
+              - '.github/workflows/**'
+            frontend:
+              - 'Pars-Frontend-React/**'
+              - '.github/workflows/**'
+
+  # ------------------------------------------------------------------
+  # FLAG PARSING (commit message / dispatch inputs)
+  # ------------------------------------------------------------------
+  flags:
+    name: Determine Flags
+    runs-on: ubuntu-latest
+    outputs:
+      skip_backend: ${{ steps.set.outputs.skip_backend }}
+      skip_frontend: ${{ steps.set.outputs.skip_frontend }}
+      run_partial: ${{ steps.set.outputs.run_partial }}
+    steps:
+      - name: Set flags from commit message or workflow inputs
+        id: set
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const msg = (context.payload.head_commit && context.payload.head_commit.message) || ''
+            const inps = context.payload.inputs || {}
+            const has = (token, key) => (msg && msg.includes(token)) || (inps[key] === 'true')
+            return {
+              skip_backend: has('[skip-backend]', 'skip-backend') ? 'true' : 'false',
+              skip_frontend: has('[skip-frontend]', 'skip-frontend') ? 'true' : 'false',
+              run_partial: has('[run-partial]', 'run-partial') ? 'true' : 'false',
+            }
+
+  # ------------------------------------------------------------------
+  # BACKEND CI
+  # ------------------------------------------------------------------
+  backend-ci:
+    needs: [changes, flags]
+    if: ${{ needs.changes.outputs.backend == 'true' && needs.flags.outputs.skip_backend != 'true' }}
+    name: Backend CI
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Pars-Backend-Nodejs
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install
+      - run: bun audit || echo "Audit warnings found"
+      - run: bun run lint
+      - run: bunx tsc --noEmit
+      - run: bun test
+        continue-on-error: true
+      - run: bun run build
+        continue-on-error: true
+
+  # ------------------------------------------------------------------
+  # FRONTEND CI
+  # ------------------------------------------------------------------
+  frontend-ci:
+    needs: [changes, flags]
+    if: ${{ needs.changes.outputs.frontend == 'true' && needs.flags.outputs.skip_frontend != 'true' }}
+    name: Frontend CI
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Pars-Frontend-React
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install
+      - run: bun audit || echo "Audit warnings found"
+      - run: bun run lint
+      - run: bunx tsc --noEmit
+      - run: bun run build
+      - run: bun test --if-present
+        continue-on-error: true
+
+  # ------------------------------------------------------------------
+  # FRONTEND STORYBOOK BUILD
+  # ------------------------------------------------------------------
+  frontend-storybook:
+    needs: [changes, flags]
+    if: ${{ needs.changes.outputs.frontend == 'true' && needs.flags.outputs.skip_frontend != 'true' }}
+    name: Frontend Storybook Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Pars-Frontend-React
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install
+      - run: bun run build:storybook
+      - uses: actions/upload-artifact@v4
+        with:
+          name: storybook-static
+          path: Pars-Frontend-React/storybook-static
+          retention-days: 7

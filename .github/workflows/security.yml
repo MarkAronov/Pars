@@ -1,0 +1,213 @@
+name: "Security Scans"
+
+on:
+  push:
+    branches: ["main", "develop"]
+    paths:
+      - "Pars-Backend-Nodejs/Dockerfile"
+      - "Pars-Backend-Nodejs/src/**"
+      - "Pars-Frontend-React/src/**"
+      - ".github/workflows/security.yml"
+  pull_request:
+    branches: ["main"]
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+    inputs:
+      skip-gitleaks:
+        description: "Skip secrets scan"
+        required: false
+        default: "false"
+      skip-docker-scan:
+        description: "Skip Docker security scans"
+        required: false
+        default: "false"
+      skip-codeql:
+        description: "Skip CodeQL analysis"
+        required: false
+        default: "false"
+      skip-nuclei:
+        description: "Skip Nuclei scan"
+        required: false
+        default: "false"
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  # ------------------------------------------------------------------
+  # FLAG PARSING
+  # ------------------------------------------------------------------
+  flags:
+    name: Determine Flags
+    runs-on: ubuntu-latest
+    outputs:
+      skip_gitleaks: ${{ steps.set.outputs.skip_gitleaks }}
+      skip_docker_scan: ${{ steps.set.outputs.skip_docker_scan }}
+      skip_codeql: ${{ steps.set.outputs.skip_codeql }}
+      skip_dependency_review: ${{ steps.set.outputs.skip_dependency_review }}
+      skip_nuclei: ${{ steps.set.outputs.skip_nuclei }}
+    steps:
+      - name: Set flags
+        id: set
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const msg = (context.payload.head_commit && context.payload.head_commit.message) || ''
+            const inps = context.payload.inputs || {}
+            const has = (token, key) => (msg && msg.includes(token)) || (inps[key] === 'true')
+            if (has('[run-partial]', 'run-partial')) {
+              return {
+                skip_gitleaks: 'true', skip_docker_scan: 'true',
+                skip_codeql: 'true', skip_dependency_review: 'true', skip_nuclei: 'true'
+              }
+            }
+            return {
+              skip_gitleaks: has('[skip-gitleaks]', 'skip-gitleaks') ? 'true' : 'false',
+              skip_docker_scan: has('[skip-docker-scan]', 'skip-docker-scan') ? 'true' : 'false',
+              skip_codeql: has('[skip-codeql]', 'skip-codeql') ? 'true' : 'false',
+              skip_dependency_review: has('[skip-dependency-review]', 'skip-dependency-review') ? 'true' : 'false',
+              skip_nuclei: has('[skip-nuclei]', 'skip-nuclei') ? 'true' : 'false',
+            }
+
+  # ------------------------------------------------------------------
+  # SECRETS SCANNING — Gitleaks
+  # ------------------------------------------------------------------
+  gitleaks:
+    name: Secrets Scan
+    runs-on: ubuntu-latest
+    needs: flags
+    if: ${{ needs.flags.outputs.skip_gitleaks != 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_COMMENTS: true
+
+  # ------------------------------------------------------------------
+  # DOCKER SECURITY SCAN — Trivy
+  # ------------------------------------------------------------------
+  docker-scan:
+    name: Docker Image Scan
+    runs-on: ubuntu-latest
+    needs: flags
+    if: ${{ needs.flags.outputs.skip_docker_scan != 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Build Docker image
+        run: docker build -t pars-backend:${{ github.sha }} .
+        working-directory: Pars-Backend-Nodejs
+      - name: Trivy filesystem scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "fs"
+          scan-ref: "."
+          format: "sarif"
+          output: "trivy-fs-results.sarif"
+          severity: "CRITICAL,HIGH,MEDIUM"
+      - name: Upload Trivy filesystem results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: "trivy-fs-results.sarif"
+          category: "trivy-filesystem"
+      - name: Trivy image scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "pars-backend:${{ github.sha }}"
+          format: "table"
+          severity: "CRITICAL,HIGH"
+          exit-code: "1"
+
+  # ------------------------------------------------------------------
+  # CODEQL ANALYSIS
+  # ------------------------------------------------------------------
+  codeql-analyze:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+    needs: flags
+    if: ${{ needs.flags.outputs.skip_codeql != 'true' }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ["javascript-typescript"]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          queries: +security-extended,security-and-quality
+      - uses: github/codeql-action/autobuild@v3
+      - uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
+
+  # ------------------------------------------------------------------
+  # DEPENDENCY REVIEW (PRs only)
+  # ------------------------------------------------------------------
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    needs: flags
+    if: github.event_name == 'pull_request' && needs.flags.outputs.skip_dependency_review != 'true'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: moderate
+          deny-licenses: GPL-3.0, AGPL-3.0
+          comment-summary-in-pr: always
+
+  # ------------------------------------------------------------------
+  # NUCLEI VULNERABILITY SCAN
+  # ------------------------------------------------------------------
+  nuclei-scan:
+    name: Nuclei Security Scan
+    runs-on: ubuntu-latest
+    needs: flags
+    if: ${{ needs.flags.outputs.skip_nuclei != 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Setup Nuclei
+        uses: projectdiscovery/setup-nuclei@v3
+        with:
+          version: latest
+      - run: nuclei -update-templates
+      - name: Run Nuclei scan
+        run: |
+          TARGET="${{ secrets.STAGING_URL || 'http://localhost:3000' }}"
+          nuclei -u $TARGET \
+            -t nuclei-templates/http/vulnerabilities/ \
+            -t nuclei-templates/http/exposures/ \
+            -severity high,critical \
+            -json -o nuclei-results.json \
+            -stats -silent || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: nuclei-results
+          path: nuclei-results.json
+          retention-days: 30
+      - name: Fail on critical findings
+        run: |
+          if [ -f nuclei-results.json ]; then
+            CRITICAL=$(jq -r 'select(.info.severity == "critical") | .info.name' nuclei-results.json 2>/dev/null | wc -l)
+            if [ "$CRITICAL" -gt 0 ]; then
+              echo "❌ Found $CRITICAL critical vulnerabilities"
+              exit 1
+            fi
+          fi

@@ -1,0 +1,7 @@
+# Ignore known non-secret patterns
+# Add patterns here if Gitleaks false-positives on test fixtures or example values
+
+# Example env files with placeholder values
+env/.env.example
+Pars-Backend-Nodejs/env/.env.example
+Pars-Frontend-React/env/.env.example

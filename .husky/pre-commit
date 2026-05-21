@@ -1,0 +1,14 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Secrets scan
+if [ -z "$SKIP_GITLEAKS" ]; then
+  if command -v gitleaks > /dev/null 2>&1; then
+    gitleaks protect --staged --verbose --redact
+  elif command -v docker > /dev/null 2>&1; then
+    docker run --rm -v "$(pwd)":/repo -w /repo ghcr.io/gitleaks/gitleaks:latest protect --staged --verbose --redact
+  fi
+fi
+
+# Lint + format staged files
+bunx lint-staged

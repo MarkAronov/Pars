@@ -22,6 +22,7 @@
         "security:nuclei:docker": "docker run --rm -v \"$(pwd)/security/nuclei-templates\":/templates projectdiscovery/nuclei:latest -u http://host.docker.internal:3000 -t /templates -severity high,critical"
     },
     "devDependencies": {
+        "@biomejs/biome": "^2.4.15",
         "husky": "^9.0.0",
         "lint-staged": "^15.0.0"
     }

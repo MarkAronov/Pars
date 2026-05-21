@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../database/prisma.service';
+import type { PrismaService } from '../../database/prisma.service';
 
 @Injectable()
 export class FeedService {
@@ -12,7 +12,10 @@ export class FeedService {
 			where: { followerId: userId },
 			select: { followeeId: true },
 		});
-		const authorIds = [userId, ...following.map((f) => f.followeeId)];
+		const authorIds = [
+			userId,
+			...following.map((f: { followeeId: string }) => f.followeeId),
+		];
 
 		const [posts, total] = await this.prisma.$transaction([
 			this.prisma.post.findMany({
@@ -25,7 +28,15 @@ export class FeedService {
 					title: true,
 					content: true,
 					createdAt: true,
-					author: { select: { id: true, username: true, displayName: true, avatarUrl: true, verified: true } },
+					author: {
+						select: {
+							id: true,
+							username: true,
+							displayName: true,
+							avatarUrl: true,
+							verified: true,
+						},
+					},
 					_count: { select: { likes: true } },
 				},
 			}),

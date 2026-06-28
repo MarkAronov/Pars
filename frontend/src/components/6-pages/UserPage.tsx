@@ -1,7 +1,7 @@
 import { useParams } from '@tanstack/react-router';
 
 const UserPage = () => {
-	const { username } = useParams({ from: '/u/$username' });
+	const { username } = useParams({ from: '/app/u/$username' });
 
 	return (
 		<div className="flex flex-col gap-4">

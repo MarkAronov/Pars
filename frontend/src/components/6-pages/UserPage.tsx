@@ -5,7 +5,7 @@ import PostCardGroup from '../3-molecules/PostCardGroup';
 import UserCard from '../3-molecules/UserCard';
 
 const UserPage = () => {
-	const { username } = useParams({ from: '/u/$username' });
+	const { username } = useParams({ from: '/app/u/$username' });
 	const {
 		data: user,
 		isLoading: userLoading,

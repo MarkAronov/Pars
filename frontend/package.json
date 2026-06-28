@@ -52,6 +52,7 @@
     "@tanstack/react-router": "^1.130.9",
     "@tanstack/react-router-devtools": "^1.130.9",
     "axios": "^1.11.0",
+    "better-auth": "^1.6.22",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "socket.io-client": "^4.8.1",

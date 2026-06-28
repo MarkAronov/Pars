@@ -1,8 +1,15 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+	BadRequestException,
+	Injectable,
+	NotFoundException,
+} from '@nestjs/common';
+// biome-ignore lint/style/useImportType: NestJS DI token — runtime usage via emitDecoratorMetadata
+import { eq } from 'drizzle-orm';
 import { fileTypeFromBuffer } from 'file-type';
-import type { PrismaService } from '../../database/prisma.service';
+import type { DrizzleService } from '../../database/drizzle.service';
+import { media, users } from '../../database/schema';
 
 const ALLOWED_IMAGE_MIMES = new Set([
 	'image/jpeg',
@@ -14,7 +21,7 @@ const MEDIA_ROOT = path.resolve(process.cwd(), 'media');
 
 @Injectable()
 export class MediaService {
-	constructor(private readonly prisma: PrismaService) {}
+	constructor(private readonly drizzle: DrizzleService) {}
 
 	async validateImageMime(buffer: Buffer): Promise<string> {
 		const type = await fileTypeFromBuffer(buffer);
@@ -45,13 +52,13 @@ export class MediaService {
 		const filename = `${uploaderId}-${Date.now()}.${ext}`;
 		const url = await this.saveFile(file.buffer, filename, 'avatar');
 
-		await this.prisma.user.update({
-			where: { id: uploaderId },
-			data: { avatarUrl: url },
-		});
-		await this.prisma.media.create({
-			data: { url, type: 'AVATAR', mimeType, size: file.size, uploaderId },
-		});
+		await this.drizzle.db
+			.update(users)
+			.set({ avatarUrl: url })
+			.where(eq(users.id, uploaderId));
+		await this.drizzle.db
+			.insert(media)
+			.values({ url, type: 'AVATAR', mimeType, size: file.size, uploaderId });
 		return { url };
 	}
 
@@ -64,26 +71,36 @@ export class MediaService {
 		const filename = `${uploaderId}-${Date.now()}.${ext}`;
 		const url = await this.saveFile(file.buffer, filename, 'backgroundImage');
 
-		await this.prisma.user.update({
-			where: { id: uploaderId },
-			data: { backgroundUrl: url },
-		});
-		await this.prisma.media.create({
-			data: { url, type: 'BACKGROUND', mimeType, size: file.size, uploaderId },
+		await this.drizzle.db
+			.update(users)
+			.set({ backgroundUrl: url })
+			.where(eq(users.id, uploaderId));
+		await this.drizzle.db.insert(media).values({
+			url,
+			type: 'BACKGROUND',
+			mimeType,
+			size: file.size,
+			uploaderId,
 		});
 		return { url };
 	}
 
 	async deleteMedia(
 		mediaId: string,
-		requesterId: string,
+		_requesterId: string,
 	): Promise<{ message: string }> {
-		const media = await this.prisma.media.findUniqueOrThrow({
-			where: { id: mediaId },
-		});
-		const filePath = path.join(MEDIA_ROOT, media.url.replace('/media/', ''));
+		const [mediaRecord] = await this.drizzle.db
+			.select()
+			.from(media)
+			.where(eq(media.id, mediaId));
+		if (!mediaRecord) throw new NotFoundException('Media not found');
+
+		const filePath = path.join(
+			MEDIA_ROOT,
+			mediaRecord.url.replace('/media/', ''),
+		);
 		await fs.unlink(filePath).catch(() => null);
-		await this.prisma.media.delete({ where: { id: mediaId } });
+		await this.drizzle.db.delete(media).where(eq(media.id, mediaId));
 		return { message: 'Media deleted' };
 	}
 }

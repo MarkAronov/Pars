@@ -1,64 +1,145 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../../database/prisma.service';
+import {
+	ForbiddenException,
+	Injectable,
+	NotFoundException,
+} from '@nestjs/common';
+// biome-ignore lint/style/useImportType: NestJS DI token — runtime usage via emitDecoratorMetadata
+import { and, desc, eq, sql } from 'drizzle-orm';
+import type { DrizzleService } from '../../database/drizzle.service';
+import { postLikes, postMentions, posts, users } from '../../database/schema';
 import type { CreatePostDto, PatchPostDto } from './post.dto';
 
-const POST_SELECT = {
-	id: true,
-	title: true,
-	content: true,
-	edited: true,
-	createdAt: true,
-	updatedAt: true,
-	author: {
-		select: { id: true, username: true, displayName: true, avatarUrl: true, verified: true },
-	},
-	_count: { select: { likes: true, mentionedBy: true } },
-	threadId: true,
-} as const;
+const postSelect = {
+	id: posts.id,
+	title: posts.title,
+	content: posts.content,
+	edited: posts.edited,
+	createdAt: posts.createdAt,
+	updatedAt: posts.updatedAt,
+	threadId: posts.threadId,
+	authorId: users.id,
+	authorUsername: users.username,
+	authorDisplayName: users.displayName,
+	authorAvatarUrl: users.avatarUrl,
+	authorVerified: users.verified,
+	likeCount: sql<number>`(select count(*)::int from ${postLikes} where ${postLikes.postId} = ${posts.id})`,
+	mentionedByCount: sql<number>`(select count(*)::int from ${postMentions} where ${postMentions.mentionedPostId} = ${posts.id})`,
+};
+
+type PostRow = {
+	id: string;
+	title: string | null;
+	content: string;
+	edited: boolean;
+	createdAt: Date;
+	updatedAt: Date;
+	threadId: string | null;
+	authorId: string;
+	authorUsername: string | null;
+	authorDisplayName: string | null;
+	authorAvatarUrl: string | null;
+	authorVerified: boolean;
+	likeCount: number;
+	mentionedByCount: number;
+};
+
+function toPost(r: PostRow) {
+	return {
+		id: r.id,
+		title: r.title,
+		content: r.content,
+		edited: r.edited,
+		createdAt: r.createdAt,
+		updatedAt: r.updatedAt,
+		threadId: r.threadId,
+		author: {
+			id: r.authorId,
+			username: r.authorUsername,
+			displayName: r.authorDisplayName,
+			avatarUrl: r.authorAvatarUrl,
+			verified: r.authorVerified,
+		},
+		_count: { likes: r.likeCount, mentionedBy: r.mentionedByCount },
+	};
+}
 
 @Injectable()
 export class PostService {
-	constructor(private readonly prisma: PrismaService) {}
+	constructor(private readonly drizzle: DrizzleService) {}
 
-	findAll(page: number, limit: number) {
-		const skip = (page - 1) * limit;
-		return this.prisma.post.findMany({ skip, take: limit, select: POST_SELECT, orderBy: { createdAt: 'desc' } });
+	async findAll(page: number, limit: number) {
+		const rows = await this.drizzle.db
+			.select(postSelect)
+			.from(posts)
+			.innerJoin(users, eq(posts.authorId, users.id))
+			.orderBy(desc(posts.createdAt))
+			.limit(limit)
+			.offset((page - 1) * limit);
+		return rows.map(toPost);
 	}
 
 	async findById(id: string) {
-		const post = await this.prisma.post.findUnique({ where: { id }, select: POST_SELECT });
-		if (!post) throw new NotFoundException('Post not found');
-		return post;
+		const [row] = await this.drizzle.db
+			.select(postSelect)
+			.from(posts)
+			.innerJoin(users, eq(posts.authorId, users.id))
+			.where(eq(posts.id, id));
+		if (!row) throw new NotFoundException('Post not found');
+		return toPost(row);
 	}
 
-	create(authorId: string, dto: CreatePostDto) {
-		return this.prisma.post.create({ data: { ...dto, authorId }, select: POST_SELECT });
+	async create(authorId: string, dto: CreatePostDto) {
+		const [inserted] = await this.drizzle.db
+			.insert(posts)
+			.values({ ...dto, authorId })
+			.returning({ id: posts.id });
+		return this.findById(inserted.id);
 	}
 
-	async patch(postId: string, userId: string, userRole: string, dto: PatchPostDto) {
-		const post = await this.prisma.post.findUnique({ where: { id: postId }, select: { authorId: true } });
-		if (!post) throw new NotFoundException('Post not found');
-		if (post.authorId !== userId && userRole !== 'admin') throw new ForbiddenException();
-		return this.prisma.post.update({ where: { id: postId }, data: { ...dto, edited: true }, select: POST_SELECT });
+	async patch(
+		postId: string,
+		userId: string,
+		userRole: string,
+		dto: PatchPostDto,
+	) {
+		const [existing] = await this.drizzle.db
+			.select({ authorId: posts.authorId })
+			.from(posts)
+			.where(eq(posts.id, postId));
+		if (!existing) throw new NotFoundException('Post not found');
+		if (existing.authorId !== userId && userRole !== 'admin')
+			throw new ForbiddenException();
+		await this.drizzle.db
+			.update(posts)
+			.set({ ...dto, edited: true })
+			.where(eq(posts.id, postId));
+		return this.findById(postId);
 	}
 
 	async delete(postId: string, userId: string, userRole: string) {
-		const post = await this.prisma.post.findUnique({ where: { id: postId }, select: { authorId: true } });
-		if (!post) throw new NotFoundException('Post not found');
-		if (post.authorId !== userId && userRole !== 'admin') throw new ForbiddenException();
-		await this.prisma.post.delete({ where: { id: postId } });
+		const [existing] = await this.drizzle.db
+			.select({ authorId: posts.authorId })
+			.from(posts)
+			.where(eq(posts.id, postId));
+		if (!existing) throw new NotFoundException('Post not found');
+		if (existing.authorId !== userId && userRole !== 'admin')
+			throw new ForbiddenException();
+		await this.drizzle.db.delete(posts).where(eq(posts.id, postId));
 		return { message: 'Post deleted' };
 	}
 
 	async toggleLike(postId: string, userId: string) {
-		const existing = await this.prisma.postLike.findUnique({
-			where: { postId_userId: { postId, userId } },
-		});
+		const [existing] = await this.drizzle.db
+			.select({ postId: postLikes.postId })
+			.from(postLikes)
+			.where(and(eq(postLikes.postId, postId), eq(postLikes.userId, userId)));
 		if (existing) {
-			await this.prisma.postLike.delete({ where: { postId_userId: { postId, userId } } });
+			await this.drizzle.db
+				.delete(postLikes)
+				.where(and(eq(postLikes.postId, postId), eq(postLikes.userId, userId)));
 			return { liked: false };
 		}
-		await this.prisma.postLike.create({ data: { postId, userId } });
+		await this.drizzle.db.insert(postLikes).values({ postId, userId });
 		return { liked: true };
 	}
 }

@@ -1,10 +1,11 @@
 /**
- * Shared test helper — re-exports the app and prisma handles from setup.ts
+ * Shared test helper — re-exports the app and drizzle handles from setup.ts
  * so individual test files don't need to import from two places.
  */
-export { app, prisma } from './setup';
+export { app, drizzle } from './setup';
 
 // Lazy getters used by test files that prefer function-style access
-import { app as _app, prisma as _prisma } from './setup';
+import { app as _app, drizzle as _drizzle } from './setup';
 export const getApp = () => Promise.resolve(_app);
-export const getPrisma = () => _prisma;
+export const getDrizzle = () => _drizzle;
+

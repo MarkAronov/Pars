@@ -8,10 +8,24 @@ import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { afterAll, afterEach, beforeAll } from 'vitest';
 import { AppModule } from '../src/app.module';
-import { PrismaService } from '../src/database/prisma.service';
+import { DrizzleService } from '../src/database/drizzle.service';
+import {
+    accounts,
+    follows,
+    media,
+    postLikes,
+    postMentions,
+    posts,
+    sessions,
+    threads,
+    topics,
+    twoFactors,
+    users,
+    verifications,
+} from '../src/database/schema';
 
 let app: INestApplication;
-let prisma: PrismaService;
+let drizzle: DrizzleService;
 
 beforeAll(async () => {
 	const moduleRef: TestingModule = await Test.createTestingModule({
@@ -26,29 +40,30 @@ beforeAll(async () => {
 	);
 	await app.init();
 
-	prisma = moduleRef.get(PrismaService);
+	drizzle = moduleRef.get(DrizzleService);
 });
 
 afterEach(async () => {
+	const db = drizzle.db;
 	// Delete in dependency order to satisfy FK constraints
-	await prisma.$transaction([
-		prisma.postLike.deleteMany(),
-		prisma.media.deleteMany(),
-		prisma.post.deleteMany(),
-		prisma.thread.deleteMany(),
-		prisma.topic.deleteMany(),
-		prisma.follow.deleteMany(),
-		prisma.twoFactor.deleteMany(),
-		prisma.verification.deleteMany(),
-		prisma.account.deleteMany(),
-		prisma.session.deleteMany(),
-		prisma.user.deleteMany(),
-	]);
+	await db.delete(postMentions);
+	await db.delete(postLikes);
+	await db.delete(media);
+	await db.delete(posts);
+	await db.delete(threads);
+	await db.delete(topics);
+	await db.delete(follows);
+	await db.delete(twoFactors);
+	await db.delete(verifications);
+	await db.delete(accounts);
+	await db.delete(sessions);
+	await db.delete(users);
 });
 
 afterAll(async () => {
 	await app.close();
 });
 
-export { app, prisma };
+export { app, drizzle };
+
 

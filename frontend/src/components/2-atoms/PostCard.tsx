@@ -1,6 +1,8 @@
 import { Link } from '@tanstack/react-router';
 import type { Post } from '../../hooks/usePosts';
 import { useToggleLike } from '../../hooks/usePosts';
+import { cn } from '../../lib/utils';
+import { AVATAR, BORDERS, COLORS, GAP, PADDING, TYPOGRAPHY } from '../1-ions';
 
 interface PostCardProps {
 	post: Post;
@@ -16,45 +18,87 @@ const PostCard = ({ post }: PostCardProps) => {
 	});
 
 	return (
-		<article className="border border-neutral-800 rounded-lg p-4 flex flex-col gap-3 hover:border-neutral-700 transition-colors bg-neutral-950">
-			<div className="flex items-center gap-2">
-				<div className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-xs font-medium text-neutral-300 uppercase select-none">
+		<article
+			className={cn(
+				'flex flex-col transition-colors',
+				BORDERS.RADIUS.lg,
+				BORDERS.BORDER.base,
+				PADDING.card,
+				GAP.md,
+				COLORS.bg,
+				'hover:border-neutral-700',
+			)}
+		>
+			<div className={cn('flex items-center', GAP.sm)}>
+				<div
+					className={cn(
+						'rounded-full bg-neutral-800 flex items-center justify-center font-medium text-neutral-300 uppercase select-none',
+						AVATAR.sm,
+					)}
+				>
 					{authorHandle[0]}
 				</div>
 				<div className="flex flex-col min-w-0">
 					<Link
 						to="/u/$username"
 						params={{ username: authorHandle }}
-						className="text-sm font-medium text-white hover:underline truncate"
+						className={cn(
+							TYPOGRAPHY.TEXT.sm,
+							'font-medium text-white hover:underline truncate',
+						)}
 					>
 						{post.author.displayName ?? authorHandle}
 					</Link>
-					<span className="text-xs text-neutral-500">
+					<span className={cn(TYPOGRAPHY.TEXT.xs, COLORS.textMuted)}>
 						@{authorHandle} · {date}
 					</span>
 				</div>
 				{post.edited && (
-					<span className="ml-auto text-xs text-neutral-600 shrink-0">
+					<span
+						className={cn(
+							'ml-auto shrink-0',
+							TYPOGRAPHY.TEXT.xs,
+							COLORS.textDisabled,
+						)}
+					>
 						edited
 					</span>
 				)}
 			</div>
 
 			{post.title && (
-				<h3 className="text-base font-semibold text-white leading-snug">
+				<h3
+					className={cn(
+						TYPOGRAPHY.TEXT.base,
+						TYPOGRAPHY.WEIGHT.semibold,
+						'text-white',
+						TYPOGRAPHY.LEADING.snug,
+					)}
+				>
 					{post.title}
 				</h3>
 			)}
 
-			<p className="text-sm text-neutral-300 leading-relaxed whitespace-pre-line">
+			<p
+				className={cn(
+					TYPOGRAPHY.TEXT.sm,
+					COLORS.textSecondary,
+					'leading-relaxed whitespace-pre-line',
+				)}
+			>
 				{post.content}
 			</p>
 
-			<div className="flex items-center gap-4 pt-1">
+			<div className={cn('flex items-center pt-1', GAP.lg)}>
 				<button
 					type="button"
 					onClick={() => toggleLike.mutate()}
-					className="flex items-center gap-1.5 text-xs text-neutral-500 hover:text-red-400 transition-colors"
+					className={cn(
+						'flex items-center gap-1.5 transition-colors',
+						TYPOGRAPHY.TEXT.xs,
+						COLORS.textMuted,
+						'hover:text-red-400',
+					)}
 				>
 					<svg
 						className="w-4 h-4"
@@ -68,8 +112,7 @@ const PostCard = ({ post }: PostCardProps) => {
 					</svg>
 					{post._count.likes}
 				</button>
-
-				<span className="text-xs text-neutral-600">
+				<span className={cn(TYPOGRAPHY.TEXT.xs, COLORS.textDisabled)}>
 					{post._count.mentionedBy} replies
 				</span>
 			</div>

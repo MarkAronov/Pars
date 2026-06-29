@@ -1,10 +1,21 @@
 import { Outlet } from '@tanstack/react-router';
+import { cn } from '../../lib/utils';
+import { COLORS, LAYOUT } from '../1-ions';
 import Header from '../3-molecules/Header';
 
 const AppLayout = () => (
-	<div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col">
+	<div
+		className={cn('min-h-screen flex flex-col', COLORS.bg, COLORS.textPrimary)}
+	>
 		<Header />
-		<main className="flex-1 max-w-3xl w-full mx-auto px-4 py-6">
+		<main
+			className={cn(
+				'flex-1 w-full mx-auto',
+				LAYOUT.CONTENT_MEDIUM,
+				LAYOUT.PAGE_PADDING,
+				LAYOUT.PAGE_Y,
+			)}
+		>
 			<Outlet />
 		</main>
 	</div>

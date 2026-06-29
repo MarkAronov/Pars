@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import type { UserProfile } from '../../hooks/useUser';
 import { authClient } from '../../lib/auth';
+import { cn } from '../../lib/utils';
+import { AVATAR, BORDERS, COLORS, GAP, PADDING, TYPOGRAPHY } from '../1-ions';
 import UserProfileEditDialog from '../2-atoms/Dialogs/UserProfileEditDialog';
 
 interface UserCardProps {
@@ -15,9 +17,14 @@ const UserCard = ({ user, isLoading }: UserCardProps) => {
 
 	if (isLoading) {
 		return (
-			<div className="rounded-lg border border-neutral-800 overflow-hidden animate-pulse">
+			<div
+				className={cn(
+					BORDERS.RADIUS.lg,
+					'border border-neutral-800 overflow-hidden animate-pulse',
+				)}
+			>
 				<div className="h-28 bg-neutral-800" />
-				<div className="px-4 py-4 flex flex-col gap-3">
+				<div className={cn('flex flex-col', GAP.md, PADDING.card)}>
 					<div className="h-4 w-32 bg-neutral-800 rounded" />
 					<div className="h-3 w-24 bg-neutral-800 rounded" />
 					<div className="h-3 w-full bg-neutral-800 rounded" />
@@ -28,7 +35,12 @@ const UserCard = ({ user, isLoading }: UserCardProps) => {
 
 	return (
 		<>
-			<div className="rounded-lg border border-neutral-800 overflow-hidden">
+			<div
+				className={cn(
+					BORDERS.RADIUS.lg,
+					'border border-neutral-800 overflow-hidden',
+				)}
+			>
 				{/* Background banner */}
 				<div
 					className="h-28 bg-neutral-800 relative"
@@ -44,9 +56,15 @@ const UserCard = ({ user, isLoading }: UserCardProps) => {
 				/>
 
 				{/* Profile info */}
-				<div className="px-4 pb-4 relative">
+				<div className={cn('px-4 pb-4 relative')}>
 					{/* Avatar */}
-					<div className="absolute -top-8 left-4 w-16 h-16 rounded-full border-2 border-neutral-950 bg-neutral-700 flex items-center justify-center text-xl font-bold text-white uppercase overflow-hidden">
+					<div
+						className={cn(
+							'absolute -top-8 left-4 rounded-full border-2 border-neutral-950 bg-neutral-700',
+							'flex items-center justify-center font-bold text-white uppercase overflow-hidden',
+							AVATAR.lg,
+						)}
+					>
 						{user.avatarUrl ? (
 							<img
 								src={user.avatarUrl}
@@ -63,51 +81,81 @@ const UserCard = ({ user, isLoading }: UserCardProps) => {
 							<button
 								type="button"
 								onClick={() => setEditOpen(true)}
-								className="px-3 py-1.5 text-xs rounded-md border border-neutral-700 text-neutral-300 hover:text-white hover:border-neutral-500 transition-colors"
+								className={cn(
+									'text-xs transition-colors',
+									BORDERS.RADIUS.md,
+									BORDERS.BORDER.subtle,
+									PADDING.buttonSm,
+									COLORS.textSecondary,
+									'hover:text-white hover:border-neutral-500',
+								)}
 							>
 								Edit profile
 							</button>
 						)}
 					</div>
 
-					<div className="mt-4 flex flex-col gap-1">
-						<h2 className="text-base font-semibold text-white">
+					<div className={cn('mt-4 flex flex-col', GAP.xs)}>
+						<h2
+							className={cn(
+								TYPOGRAPHY.TEXT.base,
+								TYPOGRAPHY.WEIGHT.semibold,
+								'text-white',
+							)}
+						>
 							{user.displayName ?? user.username ?? 'Unknown'}
 							{user.verified && (
 								<span
 									role="img"
 									aria-label="Verified"
-									className="ml-1.5 text-xs text-blue-400"
+									className={cn('ml-1.5', TYPOGRAPHY.TEXT.xs, COLORS.verified)}
 								>
 									✓
 								</span>
 							)}
 						</h2>
 						{user.username && (
-							<p className="text-sm text-neutral-500">@{user.username}</p>
+							<p className={cn(TYPOGRAPHY.TEXT.sm, COLORS.textMuted)}>
+								@{user.username}
+							</p>
 						)}
 						{user.bio && (
-							<p className="text-sm text-neutral-300 mt-1 whitespace-pre-line">
+							<p
+								className={cn(
+									TYPOGRAPHY.TEXT.sm,
+									COLORS.textSecondary,
+									'mt-1 whitespace-pre-line',
+								)}
+							>
 								{user.bio}
 							</p>
 						)}
 					</div>
 
-					<div className="flex gap-4 mt-3 text-xs text-neutral-500">
+					<div
+						className={cn(
+							'flex mt-3',
+							GAP.lg,
+							TYPOGRAPHY.TEXT.xs,
+							COLORS.textMuted,
+						)}
+					>
 						<span>
-							<strong className="text-neutral-300">
+							<strong className={COLORS.textSecondary}>
 								{user._count.following}
 							</strong>{' '}
 							Following
 						</span>
 						<span>
-							<strong className="text-neutral-300">
+							<strong className={COLORS.textSecondary}>
 								{user._count.followers}
 							</strong>{' '}
 							Followers
 						</span>
 						<span>
-							<strong className="text-neutral-300">{user._count.posts}</strong>{' '}
+							<strong className={COLORS.textSecondary}>
+								{user._count.posts}
+							</strong>{' '}
 							Posts
 						</span>
 					</div>

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSelfUser } from '../../hooks/useUser';
 import { api } from '../../lib/api';
 import { cn } from '../../lib/utils';
-import { BORDERS, COLORS, TYPOGRAPHY } from '../1-ions';
+import { COLORS, TYPOGRAPHY } from '../1-ions';
 
 const ProfileSection = () => {
 	const { data: user, refetch } = useSelfUser();
@@ -211,13 +211,7 @@ const PasswordSection = () => {
 
 const SettingsPage = () => (
 	<div className="flex flex-col gap-6">
-		<h2
-			className={cn(
-				TYPOGRAPHY.TEXT['2xl'],
-				BORDERS.RADIUS.none,
-				'font-semibold text-white',
-			)}
-		>
+		<h2 className={cn(TYPOGRAPHY.TEXT['2xl'], 'font-semibold text-white')}>
 			Settings
 		</h2>
 		<ProfileSection />

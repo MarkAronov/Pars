@@ -77,7 +77,16 @@ const LoginPage = () => {
 					</button>
 				</form>
 
-				<p className="mt-6 text-center text-sm text-neutral-500">
+				<p className="mt-4 text-center text-sm text-neutral-500">
+					<Link
+						to="/forgot-password"
+						className="text-neutral-400 hover:text-neutral-300 transition-colors"
+					>
+						Forgot password?
+					</Link>
+				</p>
+
+				<p className="mt-2 text-center text-sm text-neutral-500">
 					New to Pars?{' '}
 					<Link to="/signup" className="text-neutral-300 hover:text-white">
 						Create an account

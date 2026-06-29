@@ -1,8 +1,13 @@
 import { Link, useNavigate } from '@tanstack/react-router';
+import { Menu } from 'lucide-react';
 import { useState } from 'react';
 import { authClient } from '../../lib/auth';
 import { cn } from '../../lib/utils';
-import { BORDERS, COLORS, ZINDEX } from '../1-ions';
+import { COLORS, ZINDEX } from '../1-ions';
+
+interface HeaderProps {
+	onMenuOpen?: () => void;
+}
 
 const navLinkClass = cn(
 	'px-3 py-1.5 rounded-md text-sm transition-colors',
@@ -11,7 +16,7 @@ const navLinkClass = cn(
 	'[&.active]:text-white [&.active]:bg-neutral-800',
 );
 
-const Header = () => {
+const Header = ({ onMenuOpen }: HeaderProps) => {
 	const navigate = useNavigate();
 	const { data: session } = authClient.useSession();
 	const [menuOpen, setMenuOpen] = useState(false);
@@ -31,6 +36,22 @@ const Header = () => {
 				ZINDEX.header,
 			)}
 		>
+			{/* Mobile hamburger — hidden on md+ */}
+			{onMenuOpen && (
+				<button
+					type="button"
+					aria-label="Open navigation"
+					onClick={onMenuOpen}
+					className={cn(
+						'md:hidden p-1.5 rounded-md transition-colors',
+						COLORS.textSecondary,
+						'hover:text-white hover:bg-neutral-800',
+					)}
+				>
+					<Menu className="w-5 h-5" />
+				</button>
+			)}
+
 			<Link
 				to="/home"
 				className="font-bold text-lg tracking-tight text-white select-none"
@@ -38,7 +59,8 @@ const Header = () => {
 				Pars
 			</Link>
 
-			<nav className="flex items-center gap-1 flex-1">
+			{/* Desktop nav — hidden on mobile */}
+			<nav className="hidden md:flex items-center gap-1 flex-1">
 				<Link to="/home" className={navLinkClass}>
 					Home
 				</Link>
@@ -46,6 +68,8 @@ const Header = () => {
 					Explore
 				</Link>
 			</nav>
+
+			<div className="flex-1 md:flex-none" />
 
 			<div className="relative">
 				<button
@@ -57,11 +81,7 @@ const Header = () => {
 						'hover:text-white hover:bg-neutral-800',
 					)}
 				>
-					<span
-						className={cn(
-							'w-6 h-6 rounded-full bg-neutral-700 flex items-center justify-center text-xs font-medium uppercase',
-						)}
-					>
+					<span className="w-6 h-6 rounded-full bg-neutral-700 flex items-center justify-center text-xs font-medium uppercase">
 						{session?.user?.name?.[0] ?? '?'}
 					</span>
 					<span className="hidden sm:inline">

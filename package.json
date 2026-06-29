@@ -2,6 +2,11 @@
     "name": "pars",
     "version": "1.0.0",
     "private": true,
+    "workspaces": [
+        "backend",
+        "frontend",
+        "packages/ui"
+    ],
     "description": "Pars — a privacy-first social media platform",
     "author": "Mark Aronov",
     "license": "MIT",

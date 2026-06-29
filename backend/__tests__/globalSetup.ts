@@ -1,6 +1,7 @@
-import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
-import { RedisContainer, StartedRedisContainer } from '@testcontainers/redis';
+import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql';
+import { RedisContainer, type StartedRedisContainer } from '@testcontainers/redis';
 import { execSync } from 'node:child_process';
+import postgres from 'postgres';
 
 let pgContainer: StartedPostgreSqlContainer;
 let redisContainer: StartedRedisContainer;
@@ -22,8 +23,13 @@ export async function setup() {
 	process.env.CORS_ORIGIN = 'http://localhost:5173';
 	process.env.PORT = '0';
 
-	// Run migrations against the test database
-	execSync('bun run db:migrate', {
+	// Enable pgvector extension before schema push
+	const sql = postgres(databaseUrl);
+	await sql`CREATE EXTENSION IF NOT EXISTS vector`;
+	await sql.end();
+
+	// Push schema to the test database (no migration history required)
+	execSync('bun run db:push --force', {
 		env: { ...process.env, DATABASE_URL: databaseUrl },
 		stdio: 'pipe',
 	});
@@ -33,3 +39,4 @@ export async function teardown() {
 	await pgContainer?.stop();
 	await redisContainer?.stop();
 }
+

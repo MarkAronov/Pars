@@ -1,60 +1,134 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../../database/prisma.service';
+import {
+	ForbiddenException,
+	Injectable,
+	NotFoundException,
+} from '@nestjs/common';
+// biome-ignore lint/style/useImportType: NestJS DI token — runtime usage via emitDecoratorMetadata
+import { desc, eq, sql } from 'drizzle-orm';
+import type { DrizzleService } from '../../database/drizzle.service';
+import { posts, threads, topics, users } from '../../database/schema';
 import type { CreateThreadDto, PatchThreadDto } from './thread.dto';
 
-const THREAD_SELECT = {
-	id: true,
-	title: true,
-	createdAt: true,
-	updatedAt: true,
-	topic: { select: { id: true, name: true } },
-	originalPoster: { select: { id: true, username: true, displayName: true, avatarUrl: true } },
-	_count: { select: { posts: true } },
-} as const;
+const threadSelect = {
+	id: threads.id,
+	title: threads.title,
+	createdAt: threads.createdAt,
+	updatedAt: threads.updatedAt,
+	topicId: topics.id,
+	topicName: topics.name,
+	posterId: users.id,
+	posterUsername: users.username,
+	posterDisplayName: users.displayName,
+	posterAvatarUrl: users.avatarUrl,
+	postCount: sql<number>`(select count(*)::int from ${posts} where ${posts.threadId} = ${threads.id})`,
+};
+
+type ThreadRow = {
+	id: string;
+	title: string;
+	createdAt: Date;
+	updatedAt: Date;
+	topicId: string;
+	topicName: string;
+	posterId: string;
+	posterUsername: string | null;
+	posterDisplayName: string | null;
+	posterAvatarUrl: string | null;
+	postCount: number;
+};
+
+function toThread(r: ThreadRow) {
+	return {
+		id: r.id,
+		title: r.title,
+		createdAt: r.createdAt,
+		updatedAt: r.updatedAt,
+		topic: { id: r.topicId, name: r.topicName },
+		originalPoster: {
+			id: r.posterId,
+			username: r.posterUsername,
+			displayName: r.posterDisplayName,
+			avatarUrl: r.posterAvatarUrl,
+		},
+		_count: { posts: r.postCount },
+	};
+}
 
 @Injectable()
 export class ThreadService {
-	constructor(private readonly prisma: PrismaService) {}
+	constructor(private readonly drizzle: DrizzleService) {}
 
-	findAll(page: number, limit: number, topicId?: string) {
-		return this.prisma.thread.findMany({
-			where: topicId ? { topicId } : undefined,
-			skip: (page - 1) * limit,
-			take: limit,
-			select: THREAD_SELECT,
-			orderBy: { createdAt: 'desc' },
-		});
+	async findAll(page: number, limit: number, topicId?: string) {
+		const rows = await this.drizzle.db
+			.select(threadSelect)
+			.from(threads)
+			.innerJoin(topics, eq(threads.topicId, topics.id))
+			.innerJoin(users, eq(threads.originalPosterId, users.id))
+			.where(topicId ? eq(threads.topicId, topicId) : undefined)
+			.orderBy(desc(threads.createdAt))
+			.limit(limit)
+			.offset((page - 1) * limit);
+		return rows.map(toThread);
 	}
 
 	async findById(id: string) {
-		const thread = await this.prisma.thread.findUnique({ where: { id }, select: THREAD_SELECT });
-		if (!thread) throw new NotFoundException('Thread not found');
-		return thread;
+		const [row] = await this.drizzle.db
+			.select(threadSelect)
+			.from(threads)
+			.innerJoin(topics, eq(threads.topicId, topics.id))
+			.innerJoin(users, eq(threads.originalPosterId, users.id))
+			.where(eq(threads.id, id));
+		if (!row) throw new NotFoundException('Thread not found');
+		return toThread(row);
 	}
 
-	create(userId: string, dto: CreateThreadDto) {
-		return this.prisma.thread.create({
-			data: { ...dto, originalPosterId: userId },
-			select: THREAD_SELECT,
-		});
+	async create(userId: string, dto: CreateThreadDto) {
+		const [inserted] = await this.drizzle.db
+			.insert(threads)
+			.values({ ...dto, originalPosterId: userId })
+			.returning({ id: threads.id });
+		return this.findById(inserted.id);
 	}
 
-	async patch(threadId: string, userId: string, userRole: string, dto: PatchThreadDto) {
-		const thread = await this.prisma.thread.findUnique({ where: { id: threadId }, select: { originalPosterId: true } });
-		if (!thread) throw new NotFoundException('Thread not found');
-		if (thread.originalPosterId !== userId && userRole !== 'admin' && userRole !== 'moderator') {
+	async patch(
+		threadId: string,
+		userId: string,
+		userRole: string,
+		dto: PatchThreadDto,
+	) {
+		const [existing] = await this.drizzle.db
+			.select({ originalPosterId: threads.originalPosterId })
+			.from(threads)
+			.where(eq(threads.id, threadId));
+		if (!existing) throw new NotFoundException('Thread not found');
+		if (
+			existing.originalPosterId !== userId &&
+			userRole !== 'admin' &&
+			userRole !== 'moderator'
+		) {
 			throw new ForbiddenException();
 		}
-		return this.prisma.thread.update({ where: { id: threadId }, data: dto, select: THREAD_SELECT });
+		await this.drizzle.db
+			.update(threads)
+			.set(dto)
+			.where(eq(threads.id, threadId));
+		return this.findById(threadId);
 	}
 
 	async delete(threadId: string, userId: string, userRole: string) {
-		const thread = await this.prisma.thread.findUnique({ where: { id: threadId }, select: { originalPosterId: true } });
-		if (!thread) throw new NotFoundException('Thread not found');
-		if (thread.originalPosterId !== userId && userRole !== 'admin' && userRole !== 'moderator') {
+		const [existing] = await this.drizzle.db
+			.select({ originalPosterId: threads.originalPosterId })
+			.from(threads)
+			.where(eq(threads.id, threadId));
+		if (!existing) throw new NotFoundException('Thread not found');
+		if (
+			existing.originalPosterId !== userId &&
+			userRole !== 'admin' &&
+			userRole !== 'moderator'
+		) {
 			throw new ForbiddenException();
 		}
-		await this.prisma.thread.delete({ where: { id: threadId } });
+		await this.drizzle.db.delete(threads).where(eq(threads.id, threadId));
 		return { message: 'Thread deleted' };
 	}
 }

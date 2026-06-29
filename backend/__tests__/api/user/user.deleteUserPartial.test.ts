@@ -1,7 +1,8 @@
-import { describe, it, expect, beforeAll } from 'vitest';
-import { getApp, getPrisma } from '../database';
+import { describe, it, beforeAll } from 'vitest';
+import { getApp, getDrizzle } from '../database';
 import request from 'supertest';
 import * as argon2 from 'argon2';
+import { users, accounts } from '../../src/database/schema';
 
 describe('DELETE /api/users/:id (admin)', () => {
 	let app: Awaited<ReturnType<typeof getApp>>;
@@ -11,18 +12,23 @@ describe('DELETE /api/users/:id (admin)', () => {
 	});
 
 	it('admin can delete another user', async () => {
-		const prisma = getPrisma();
+		const db = getDrizzle().db;
 
 		// Create admin directly with hashed password
 		const adminEmail = `admin-partial-${Date.now()}@test.com`;
 		const adminPassword = 'Admin@123456!';
 		const hash = await argon2.hash(adminPassword);
 
-		const admin = await prisma.user.create({
-			data: { email: adminEmail, name: 'Admin User', emailVerified: true, role: 'admin' },
-		});
-		await prisma.account.create({
-			data: { accountId: admin.id, providerId: 'credential', userId: admin.id, password: hash },
+		const [admin] = await db
+			.insert(users)
+			.values({ id: crypto.randomUUID(), email: adminEmail, name: 'Admin User', emailVerified: true, role: 'admin' })
+			.returning();
+		await db.insert(accounts).values({
+			id: crypto.randomUUID(),
+			accountId: admin.id,
+			providerId: 'credential',
+			userId: admin.id,
+			password: hash,
 		});
 
 		// Create target user via API

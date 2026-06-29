@@ -5,6 +5,7 @@ import { useDeletePost, useToggleLike } from '../../hooks/usePosts';
 import { authClient } from '../../lib/auth';
 import { cn } from '../../lib/utils';
 import { AVATAR, BORDERS, COLORS, GAP, PADDING, TYPOGRAPHY } from '../1-ions';
+import EditPostDialog from './Dialogs/EditPostDialog';
 import PostOptionsMenu from './PostOptionsMenu';
 import ViewMediaDialog from './ViewMediaDialog';
 
@@ -17,6 +18,7 @@ const PostCard = ({ post }: PostCardProps) => {
 	const deletePost = useDeletePost();
 	const { data: session } = authClient.useSession();
 	const [mediaViewer, setMediaViewer] = useState<string | null>(null);
+	const [editOpen, setEditOpen] = useState(false);
 
 	const authorHandle =
 		post.author.username ?? post.author.displayName ?? 'unknown';
@@ -41,14 +43,22 @@ const PostCard = ({ post }: PostCardProps) => {
 			>
 				{/* Header row */}
 				<div className={cn('flex items-center', GAP.sm)}>
-					<div
-						className={cn(
-							'rounded-full bg-neutral-800 flex items-center justify-center font-medium text-neutral-300 uppercase select-none shrink-0',
-							AVATAR.sm,
-						)}
-					>
-						{authorHandle[0]}
-					</div>
+					{post.author.avatarUrl ? (
+						<img
+							src={post.author.avatarUrl}
+							alt=""
+							className={cn('rounded-full object-cover shrink-0', AVATAR.sm)}
+						/>
+					) : (
+						<div
+							className={cn(
+								'rounded-full bg-neutral-800 flex items-center justify-center font-medium text-neutral-300 uppercase select-none shrink-0',
+								AVATAR.sm,
+							)}
+						>
+							{authorHandle[0]}
+						</div>
+					)}
 					<div className="flex flex-col min-w-0 flex-1">
 						<Link
 							to="/u/$username"
@@ -72,6 +82,7 @@ const PostCard = ({ post }: PostCardProps) => {
 					<PostOptionsMenu
 						isOwn={isOwn}
 						onDelete={() => deletePost.mutate(post.id)}
+						onEdit={() => setEditOpen(true)}
 					/>
 				</div>
 
@@ -165,6 +176,12 @@ const PostCard = ({ post }: PostCardProps) => {
 					}}
 				/>
 			)}
+
+			<EditPostDialog
+				post={post}
+				open={editOpen}
+				onClose={() => setEditOpen(false)}
+			/>
 		</>
 	);
 };

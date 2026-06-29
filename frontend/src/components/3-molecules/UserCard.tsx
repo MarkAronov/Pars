@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { UserProfile } from '../../hooks/useUser';
+import { useFollowUser, useUnfollowUser } from '../../hooks/useUser';
 import { authClient } from '../../lib/auth';
 import { cn } from '../../lib/utils';
 import { AVATAR, BORDERS, COLORS, GAP, PADDING, TYPOGRAPHY } from '../1-ions';
@@ -16,6 +17,8 @@ const UserCard = ({ user, isLoading }: UserCardProps) => {
 	const [editOpen, setEditOpen] = useState(false);
 	const [mediaViewer, setMediaViewer] = useState<string | null>(null);
 	const isSelf = session?.user?.id === user.id;
+	const followUser = useFollowUser(user.id);
+	const unfollowUser = useUnfollowUser(user.id);
 
 	if (isLoading) {
 		return (
@@ -94,7 +97,7 @@ const UserCard = ({ user, isLoading }: UserCardProps) => {
 					)}
 
 					<div className="flex items-start justify-end pt-2 pb-2 min-h-[2.5rem]">
-						{isSelf && (
+						{isSelf ? (
 							<button
 								type="button"
 								onClick={() => setEditOpen(true)}
@@ -109,6 +112,22 @@ const UserCard = ({ user, isLoading }: UserCardProps) => {
 							>
 								Edit profile
 							</button>
+						) : (
+							session?.user && (
+								<button
+									type="button"
+									disabled={followUser.isPending || unfollowUser.isPending}
+									onClick={() => followUser.mutate()}
+									className={cn(
+										'text-xs font-medium transition-colors',
+										BORDERS.RADIUS.md,
+										PADDING.buttonSm,
+										'bg-white text-neutral-950 hover:bg-neutral-200 disabled:opacity-50',
+									)}
+								>
+									Follow
+								</button>
+							)
 						)}
 					</div>
 

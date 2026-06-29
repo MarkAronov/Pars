@@ -7,9 +7,16 @@ export interface Post {
 	content: string;
 	edited: boolean;
 	createdAt: string;
-	author: { id: string; username: string | null; displayName: string | null; avatarUrl: string | null; verified: boolean };
+	author: {
+		id: string;
+		username: string | null;
+		displayName: string | null;
+		avatarUrl: string | null;
+		verified: boolean;
+	};
 	_count: { likes: number; mentionedBy: number };
 	threadId: string | null;
+	mediaFiles?: string[];
 }
 
 export function usePosts(page = 1, limit = 20) {
@@ -33,8 +40,11 @@ export function usePost(id: string) {
 export function useCreatePost() {
 	const qc = useQueryClient();
 	return useMutation({
-		mutationFn: (data: { title?: string; content: string; threadId?: string }) =>
-			api.post<Post>('/api/posts', data),
+		mutationFn: (data: {
+			title?: string;
+			content: string;
+			threadId?: string;
+		}) => api.post<Post>('/api/posts', data),
 		onSuccess: () => qc.invalidateQueries({ queryKey: ['posts'] }),
 	});
 }
@@ -44,5 +54,28 @@ export function useToggleLike(postId: string) {
 	return useMutation({
 		mutationFn: () => api.post<{ liked: boolean }>(`/api/posts/${postId}/like`),
 		onSuccess: () => qc.invalidateQueries({ queryKey: ['posts', postId] }),
+	});
+}
+
+export function useDeletePost() {
+	const qc = useQueryClient();
+	return useMutation({
+		mutationFn: (postId: string) => api.delete<void>(`/api/posts/${postId}`),
+		onSuccess: () => qc.invalidateQueries({ queryKey: ['posts'] }),
+	});
+}
+
+export function useEditPost() {
+	const qc = useQueryClient();
+	return useMutation({
+		mutationFn: ({
+			postId,
+			data,
+		}: {
+			postId: string;
+			data: { title?: string; content?: string };
+		}) => api.patch<Post>(`/api/posts/${postId}`, data),
+		onSuccess: (_, { postId }) =>
+			qc.invalidateQueries({ queryKey: ['posts', postId] }),
 	});
 }

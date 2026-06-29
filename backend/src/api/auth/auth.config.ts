@@ -1,7 +1,7 @@
 import * as argon2 from 'argon2';
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
-import { twoFactor } from 'better-auth/plugins';
+import { bearer, twoFactor } from 'better-auth/plugins';
 import type { PrismaService } from '../../database/prisma.service';
 
 type AuthInstance = ReturnType<typeof betterAuth>;
@@ -18,7 +18,7 @@ export function initAuth(prisma: PrismaService): AuthInstance {
 		emailAndPassword: {
 			enabled: true,
 		},
-		plugins: [twoFactor()],
+		plugins: [twoFactor(), bearer()],
 		secret: process.env.SESSION_SECRET ?? 'change-me-in-production-32-chars!!',
 		trustedOrigins: (process.env.CORS_ORIGIN ?? 'http://localhost:5173').split(
 			',',

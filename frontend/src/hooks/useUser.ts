@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api';
 
 export interface UserProfile {
@@ -29,5 +29,23 @@ export function useSelfUser() {
 		queryFn: () => api.get<UserProfile>('/api/users/me'),
 		staleTime: 30_000,
 		retry: 1,
+	});
+}
+
+export function useFollowUser(targetId: string) {
+	const qc = useQueryClient();
+	return useMutation({
+		mutationFn: () =>
+			api.post<{ following: boolean }>(`/api/users/${targetId}/follow`),
+		onSuccess: () => qc.invalidateQueries({ queryKey: ['users', targetId] }),
+	});
+}
+
+export function useUnfollowUser(targetId: string) {
+	const qc = useQueryClient();
+	return useMutation({
+		mutationFn: () =>
+			api.delete<{ following: boolean }>(`/api/users/${targetId}/follow`),
+		onSuccess: () => qc.invalidateQueries({ queryKey: ['users', targetId] }),
 	});
 }

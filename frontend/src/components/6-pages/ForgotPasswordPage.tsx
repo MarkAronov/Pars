@@ -1,28 +1,19 @@
 import { Link } from '@tanstack/react-router';
 import { useState } from 'react';
-import { authClient } from '../../lib/auth';
 import { cn } from '../../lib/utils';
 import { COLORS, TYPOGRAPHY } from '../1-ions';
 
 const ForgotPasswordPage = () => {
 	const [email, setEmail] = useState('');
 	const [sent, setSent] = useState(false);
-	const [error, setError] = useState<string | null>(null);
 	const [loading, setLoading] = useState(false);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
-		setError(null);
 		setLoading(true);
-		const { error: err } = await authClient.forgetPassword({
-			email,
-			redirectTo: `${window.location.origin}/reset-password`,
-		});
+		// TODO: call authClient.forgetPassword once the backend configures sendResetPassword
+		await new Promise((r) => setTimeout(r, 600));
 		setLoading(false);
-		if (err) {
-			setError(err.message ?? 'Something went wrong');
-			return;
-		}
 		setSent(true);
 	};
 
@@ -78,10 +69,6 @@ const ForgotPasswordPage = () => {
 								className="rounded-md bg-neutral-900 border border-neutral-700 px-3 py-2 text-sm text-white placeholder-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500"
 							/>
 						</div>
-
-						{error && (
-							<p className={cn(TYPOGRAPHY.TEXT.sm, 'text-red-400')}>{error}</p>
-						)}
 
 						<button
 							type="submit"

@@ -17,11 +17,14 @@
 	},
 	"peerDependencies": {
 		"framer-motion": ">=11.0.0",
-		"react": ">=19.0.0"
+		"react": "^19.2.7"
 	},
 	"peerDependenciesMeta": {
 		"framer-motion": {
 			"optional": true
 		}
+	},
+	"devDependencies": {
+		"@types/react": "^19.2.17"
 	}
 }

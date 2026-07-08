@@ -18,6 +18,31 @@ import StartPage from './components/6-pages/StartPage';
 import UserPage from './components/6-pages/UserPage';
 import { authClient } from './lib/auth';
 
+// beforeLoad reruns on every navigation (unlike loaders, it ignores staleTime),
+// so without this cache every route change would re-hit the session endpoint.
+const SESSION_CACHE_MS = 5_000;
+let cachedSessionPromise: Promise<unknown> | null = null;
+let cachedSessionAt = 0;
+
+// Call after sign-in/sign-up/sign-out so the next navigation's beforeLoad
+// doesn't act on a stale cached session for up to SESSION_CACHE_MS.
+export const invalidateSessionCache = () => {
+	cachedSessionPromise = null;
+};
+
+// Returns the session or null — never throws (network failures = logged out)
+const getSession = async () => {
+	const now = Date.now();
+	if (!cachedSessionPromise || now - cachedSessionAt > SESSION_CACHE_MS) {
+		cachedSessionAt = now;
+		cachedSessionPromise = authClient
+			.getSession()
+			.then(({ data }) => data?.session ?? null)
+			.catch(() => null);
+	}
+	return cachedSessionPromise;
+};
+
 // ── Root ──────────────────────────────────────────────────────────────────────
 
 const rootRoute = createRootRoute({ component: Outlet });
@@ -28,8 +53,8 @@ const startRoute = createRoute({
 	getParentRoute: () => rootRoute,
 	path: '/',
 	beforeLoad: async () => {
-		const { data } = await authClient.getSession();
-		if (data?.session) throw redirect({ to: '/home' });
+		const session = await getSession();
+		if (session) throw redirect({ to: '/home' });
 	},
 	component: StartPage,
 });
@@ -38,8 +63,8 @@ const loginRoute = createRoute({
 	getParentRoute: () => rootRoute,
 	path: '/login',
 	beforeLoad: async () => {
-		const { data } = await authClient.getSession();
-		if (data?.session) throw redirect({ to: '/home' });
+		const session = await getSession();
+		if (session) throw redirect({ to: '/home' });
 	},
 	component: LoginPage,
 });
@@ -48,8 +73,8 @@ const signupRoute = createRoute({
 	getParentRoute: () => rootRoute,
 	path: '/signup',
 	beforeLoad: async () => {
-		const { data } = await authClient.getSession();
-		if (data?.session) throw redirect({ to: '/home' });
+		const session = await getSession();
+		if (session) throw redirect({ to: '/home' });
 	},
 	component: SignUpPage,
 });
@@ -64,8 +89,8 @@ const forgotPasswordRoute = createRoute({
 	getParentRoute: () => rootRoute,
 	path: '/forgot-password',
 	beforeLoad: async () => {
-		const { data } = await authClient.getSession();
-		if (data?.session) throw redirect({ to: '/home' });
+		const session = await getSession();
+		if (session) throw redirect({ to: '/home' });
 	},
 	component: ForgotPasswordPage,
 });
@@ -82,8 +107,8 @@ const appLayoutRoute = createRoute({
 	getParentRoute: () => rootRoute,
 	id: 'app',
 	beforeLoad: async () => {
-		const { data } = await authClient.getSession();
-		if (!data?.session) throw redirect({ to: '/' });
+		const session = await getSession();
+		if (!session) throw redirect({ to: '/' });
 	},
 	component: AppLayout,
 });

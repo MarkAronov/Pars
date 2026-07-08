@@ -1,9 +1,12 @@
 import { Link, useNavigate } from '@tanstack/react-router';
 import { Menu } from 'lucide-react';
 import { useState } from 'react';
+import { useSelfUser } from '../../hooks/useUser';
 import { authClient } from '../../lib/auth';
 import { cn } from '../../lib/utils';
+import { invalidateSessionCache } from '../../router';
 import { COLORS, ZINDEX } from '../1-ions';
+import ParsLogo from '../2-atoms/ParsLogo';
 
 interface HeaderProps {
 	onMenuOpen?: () => void;
@@ -19,10 +22,12 @@ const navLinkClass = cn(
 const Header = ({ onMenuOpen }: HeaderProps) => {
 	const navigate = useNavigate();
 	const { data: session } = authClient.useSession();
+	const { data: selfUser } = useSelfUser();
 	const [menuOpen, setMenuOpen] = useState(false);
 
 	const handleLogout = async () => {
 		await authClient.signOut();
+		invalidateSessionCache();
 		navigate({ to: '/' });
 	};
 
@@ -52,11 +57,8 @@ const Header = ({ onMenuOpen }: HeaderProps) => {
 				</button>
 			)}
 
-			<Link
-				to="/home"
-				className="font-bold text-lg tracking-tight text-white select-none"
-			>
-				Pars
+			<Link to="/home" className="select-none">
+				<ParsLogo size={52} />
 			</Link>
 
 			{/* Desktop nav — hidden on mobile */}
@@ -112,7 +114,7 @@ const Header = ({ onMenuOpen }: HeaderProps) => {
 							{session?.user && (
 								<Link
 									to="/u/$username"
-									params={{ username: session.user.name }}
+									params={{ username: selfUser?.username ?? '' }}
 									className={cn(
 										'block px-3 py-2 text-sm',
 										COLORS.textSecondary,

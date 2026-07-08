@@ -1,6 +1,10 @@
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import { authClient } from '../../lib/auth';
+import { cn } from '../../lib/utils';
+import { invalidateSessionCache } from '../../router';
+import { BORDER, BORDERS, COLORS, HOVER, TYPOGRAPHY, WEIGHT } from '../1-ions';
+import AuthLayout from '../5-templates/AuthLayout';
 
 const SignUpPage = () => {
 	const navigate = useNavigate();
@@ -36,19 +40,40 @@ const SignUpPage = () => {
 			setError(err.message ?? 'Sign-up failed');
 			return;
 		}
+		invalidateSessionCache();
 		navigate({ to: '/home' });
 	};
 
+	const inputClass = cn(
+		BORDERS.RADIUS.md,
+		COLORS.surface,
+		BORDER.subtle,
+		'px-3 py-2',
+		TYPOGRAPHY.TEXT.sm,
+		COLORS.textPrimary,
+		'placeholder-neutral-500',
+		BORDER.focus,
+	);
+
 	return (
-		<div className="min-h-screen bg-neutral-950 flex items-center justify-center px-4">
+		<AuthLayout>
 			<div className="w-full max-w-sm">
-				<h1 className="text-2xl font-bold text-white mb-6 text-center">
+				<h1
+					className={cn(
+						TYPOGRAPHY.TEXT['2xl'],
+						WEIGHT.bold,
+						'text-white mb-6 text-center',
+					)}
+				>
 					Create your account
 				</h1>
 
 				<form onSubmit={handleSubmit} className="flex flex-col gap-4">
 					<div className="flex flex-col gap-1.5">
-						<label htmlFor="name" className="text-sm text-neutral-400">
+						<label
+							htmlFor="name"
+							className={cn(TYPOGRAPHY.TEXT.sm, COLORS.textMuted)}
+						>
 							Display name
 						</label>
 						<input
@@ -58,12 +83,15 @@ const SignUpPage = () => {
 							required
 							value={form.name}
 							onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-							className="rounded-md bg-neutral-900 border border-neutral-700 px-3 py-2 text-sm text-white placeholder-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500"
+							className={inputClass}
 						/>
 					</div>
 
 					<div className="flex flex-col gap-1.5">
-						<label htmlFor="email" className="text-sm text-neutral-400">
+						<label
+							htmlFor="email"
+							className={cn(TYPOGRAPHY.TEXT.sm, COLORS.textMuted)}
+						>
 							Email
 						</label>
 						<input
@@ -75,12 +103,15 @@ const SignUpPage = () => {
 							onChange={(e) =>
 								setForm((f) => ({ ...f, email: e.target.value }))
 							}
-							className="rounded-md bg-neutral-900 border border-neutral-700 px-3 py-2 text-sm text-white placeholder-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500"
+							className={inputClass}
 						/>
 					</div>
 
 					<div className="flex flex-col gap-1.5">
-						<label htmlFor="password" className="text-sm text-neutral-400">
+						<label
+							htmlFor="password"
+							className={cn(TYPOGRAPHY.TEXT.sm, COLORS.textMuted)}
+						>
 							Password
 						</label>
 						<input
@@ -93,14 +124,14 @@ const SignUpPage = () => {
 							onChange={(e) =>
 								setForm((f) => ({ ...f, password: e.target.value }))
 							}
-							className="rounded-md bg-neutral-900 border border-neutral-700 px-3 py-2 text-sm text-white placeholder-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500"
+							className={inputClass}
 						/>
 					</div>
 
 					<div className="flex flex-col gap-1.5">
 						<label
 							htmlFor="passwordRepeat"
-							className="text-sm text-neutral-400"
+							className={cn(TYPOGRAPHY.TEXT.sm, COLORS.textMuted)}
 						>
 							Repeat password
 						</label>
@@ -113,32 +144,58 @@ const SignUpPage = () => {
 							onChange={(e) =>
 								setForm((f) => ({ ...f, passwordRepeat: e.target.value }))
 							}
-							className={`rounded-md bg-neutral-900 border px-3 py-2 text-sm text-white placeholder-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500 ${passwordMismatch ? 'border-red-500' : 'border-neutral-700'}`}
+							className={cn(
+								BORDERS.RADIUS.md,
+								COLORS.surface,
+								'border',
+								passwordMismatch ? COLORS.dangerBorder : COLORS.borderSubtle,
+								'px-3 py-2',
+								TYPOGRAPHY.TEXT.sm,
+								COLORS.textPrimary,
+								'placeholder-neutral-500',
+								BORDER.focus,
+							)}
 						/>
 						{passwordMismatch && (
-							<p className="text-xs text-red-400">Passwords do not match</p>
+							<p className={cn(TYPOGRAPHY.TEXT.xs, COLORS.danger)}>
+								Passwords do not match
+							</p>
 						)}
 					</div>
 
-					{error && <p className="text-sm text-red-400">{error}</p>}
+					{error && (
+						<p className={cn(TYPOGRAPHY.TEXT.sm, COLORS.danger)}>{error}</p>
+					)}
 
 					<button
 						type="submit"
 						disabled={loading || !!passwordMismatch}
-						className="rounded-md bg-white text-neutral-950 px-4 py-2 text-sm font-medium hover:bg-neutral-200 disabled:opacity-50 transition-colors"
+						className={cn(
+							BORDERS.RADIUS.md,
+							'bg-white text-neutral-950 px-4 py-2',
+							TYPOGRAPHY.TEXT.sm,
+							WEIGHT.medium,
+							'hover:bg-neutral-200 disabled:opacity-50 transition-colors',
+						)}
 					>
 						{loading ? 'Creating account…' : 'Create account'}
 					</button>
 				</form>
 
-				<p className="mt-6 text-center text-sm text-neutral-500">
+				<p
+					className={cn(
+						'mt-6 text-center',
+						TYPOGRAPHY.TEXT.sm,
+						COLORS.textMuted,
+					)}
+				>
 					Already have an account?{' '}
-					<Link to="/login" className="text-neutral-300 hover:text-white">
+					<Link to="/login" className={cn(COLORS.textSecondary, HOVER.text)}>
 						Sign in
 					</Link>
 				</p>
 			</div>
-		</div>
+		</AuthLayout>
 	);
 };
 

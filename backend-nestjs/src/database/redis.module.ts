@@ -9,7 +9,9 @@ export const REDIS_CLIENT = 'REDIS_CLIENT';
 		{
 			provide: REDIS_CLIENT,
 			useFactory: () => {
-				const client = new Redis(process.env.REDIS_URL ?? 'redis://localhost:6379');
+				const client = new Redis(
+					process.env.REDIS_URL ?? 'redis://localhost:6379',
+				);
 				client.on('error', (err) => console.error('Redis error', err));
 				return client;
 			},

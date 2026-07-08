@@ -1,5 +1,5 @@
-import { IsNotEmpty, IsOptional, IsString, Length } from 'class-validator';
 import { PartialType } from '@nestjs/mapped-types';
+import { IsNotEmpty, IsOptional, IsString, Length } from 'class-validator';
 
 export class CreateTopicDto {
 	@IsNotEmpty()

@@ -1,15 +1,15 @@
 echo "Running pre-push checks..."
 
 # Backend checks
-if [ -d "backend" ]; then
-  echo "→ Backend: type check"
-  (cd backend && bunx tsc --noEmit) || exit 1
+if [ -d "backend-nestjs" ]; then
+  echo "→ backend-nestjs: type check"
+  (cd backend-nestjs && bunx tsc --noEmit) || exit 1
 
-  echo "→ Backend: tests (skipped locally — requires Docker/Testcontainers, runs in CI)"
-  # (cd backend && bun test) || exit 1
+  echo "→ backend-nestjs: tests (skipped locally — requires Docker/Testcontainers, runs in CI)"
+  # (cd backend-nestjs && bun test) || exit 1
 
-  echo "→ Backend: build"
-  (cd backend && bun run build) || exit 1
+  echo "→ backend-nestjs: build"
+  (cd backend-nestjs && bun run build) || exit 1
 fi
 
 # Frontend checks
@@ -23,8 +23,8 @@ fi
 
 # Full security checks (opt-in)
 if [ "$FULL_PRE_PUSH" = "1" ]; then
-  echo "→ Security: bun audit (backend)"
-  (cd backend && bun audit) || true
+  echo "→ Security: bun audit (backend-nestjs)"
+  (cd backend-nestjs && bun audit) || true
 
   echo "→ Security: bun audit (frontend)"
   (cd frontend && bun audit) || true

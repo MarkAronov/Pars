@@ -4,8 +4,8 @@ on:
   push:
     branches: ["main", "develop"]
     paths:
-      - "backend/Dockerfile"
-      - "backend/src/**"
+      - "backend-nestjs/Dockerfile"
+      - "backend-nestjs/src/**"
       - "frontend/src/**"
       - ".github/workflows/security.yml"
   pull_request:
@@ -102,7 +102,7 @@ jobs:
         with:
       - name: Build Docker image
         run: docker build -t pars-backend:${{ github.sha }} .
-        working-directory: backend
+        working-directory: backend-nestjs
       - name: Trivy filesystem scan
         uses: aquasecurity/trivy-action@master
         with:

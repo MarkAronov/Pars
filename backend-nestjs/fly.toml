@@ -1,6 +1,6 @@
-# Run `fly launch` inside backend/ to create the app, then `fly deploy`
+# Run `fly launch` inside backend-nestjs/ to create the app, then `fly deploy`
 # Tigris storage: run `fly storage create` after launch to provision + auto-set S3 secrets
-app = "pars-backend"
+app = "pars-backend-nestjs"
 primary_region = "ams"
 
 [build]

@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "private": true,
     "workspaces": [
-        "backend",
+        "backend-nestjs",
         "frontend",
         "packages/ui"
     ],
@@ -12,13 +12,13 @@
     "license": "MIT",
     "scripts": {
         "prepare": "husky",
-        "dev:backend": "cd backend && bun run dev",
+        "dev:backend-nestjs": "cd backend-nestjs && bun run dev",
         "dev:frontend": "cd frontend && bun run dev",
-        "test:backend": "cd backend && bun test",
+        "test:backend-nestjs": "cd backend-nestjs && bun test",
         "test:frontend": "cd frontend && bun test",
-        "build:backend": "cd backend && bun run build",
+        "build:backend-nestjs": "cd backend-nestjs && bun run build",
         "build:frontend": "cd frontend && bun run build",
-        "lint:backend": "cd backend && bun run lint",
+        "lint:backend-nestjs": "cd backend-nestjs && bun run lint",
         "lint:frontend": "cd frontend && bun run lint",
         "push:full": "FULL_PRE_PUSH=1 git push",
         "push:partial": "git commit --allow-empty -m 'chore: trigger partial CI [run-partial]' && git push",

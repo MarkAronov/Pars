@@ -15,6 +15,7 @@ import { RedisModule } from './database/redis.module';
 import { FeedGateway } from './gateways/feed.gateway';
 import { NotificationsGateway } from './gateways/notifications.gateway';
 import { PresenceGateway } from './gateways/presence.gateway';
+import { StorageModule } from './storage/storage.module';
 
 @Module({
 	imports: [
@@ -22,6 +23,7 @@ import { PresenceGateway } from './gateways/presence.gateway';
 		ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
 		DrizzleModule,
 		RedisModule,
+		StorageModule,
 		AuthModule,
 		UserModule,
 		PostModule,

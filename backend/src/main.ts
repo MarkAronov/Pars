@@ -1,13 +1,15 @@
+import { resolve } from 'node:path';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 
-async function bootstrap() {
-	const app = await NestFactory.create(AppModule);
+const bootstrap = async () => {
+	const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
 	// Security
 	app.use(helmet());
@@ -32,6 +34,12 @@ async function bootstrap() {
 	// Global prefix
 	app.setGlobalPrefix('api');
 
+	// Serve uploaded files from disk when using the local storage driver.
+	// /media/* is intentionally outside /api to avoid the global prefix.
+	if (process.env.STORAGE_DRIVER === 'local') {
+		app.useStaticAssets(resolve(process.cwd(), 'media'), { prefix: '/media' });
+	}
+
 	// Swagger (dev only)
 	if (process.env.NODE_ENV !== 'production') {
 		const config = new DocumentBuilder()
@@ -45,6 +53,6 @@ async function bootstrap() {
 	}
 
 	await app.listen(process.env.PORT ?? 3000);
-}
+};
 
 bootstrap();

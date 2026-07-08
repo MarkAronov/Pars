@@ -1,0 +1,32 @@
+# Run `fly launch` inside backend/ to create the app, then `fly deploy`
+# Tigris storage: run `fly storage create` after launch to provision + auto-set S3 secrets
+app = "pars-backend"
+primary_region = "ams"
+
+[build]
+
+[deploy]
+  # Runs migrations against the production DB before each new version goes live
+  release_command = "bun run db:migrate"
+
+[env]
+  NODE_ENV = "production"
+  PORT = "3000"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+  [http_service.concurrency]
+    type = "connections"
+    hard_limit = 100
+    soft_limit = 80
+
+[[vm]]
+  memory = "1gb"
+  cpu_kind = "shared"
+  cpus = 1

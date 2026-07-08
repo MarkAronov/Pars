@@ -1,5 +1,5 @@
 import { useParams } from '@tanstack/react-router';
-import { usePosts } from '../../hooks/usePosts';
+import { useUserPosts } from '../../hooks/usePosts';
 import { useUser } from '../../hooks/useUser';
 import PostCardGroup from '../3-molecules/PostCardGroup';
 import UserCard from '../3-molecules/UserCard';
@@ -11,7 +11,7 @@ const UserPage = () => {
 		isLoading: userLoading,
 		isError: userError,
 	} = useUser(username);
-	const { data: posts, isLoading: postsLoading } = usePosts(1, 20);
+	const { data: posts, isLoading: postsLoading } = useUserPosts(user?.id ?? '');
 
 	if (userError) {
 		return (
@@ -20,8 +20,6 @@ const UserPage = () => {
 			</div>
 		);
 	}
-
-	const userPosts = posts?.filter((p) => p.author.username === username) ?? [];
 
 	return (
 		<div className="flex flex-col gap-6">
@@ -50,7 +48,7 @@ const UserPage = () => {
 				{postsLoading ? (
 					<p className="text-sm text-neutral-600 py-4 text-center">Loading…</p>
 				) : (
-					<PostCardGroup posts={userPosts} />
+					<PostCardGroup posts={posts ?? []} />
 				)}
 			</div>
 		</div>

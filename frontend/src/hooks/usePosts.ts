@@ -28,6 +28,19 @@ export function usePosts(page = 1, limit = 20) {
 	});
 }
 
+export function useUserPosts(authorId: string, page = 1, limit = 20) {
+	return useQuery({
+		queryKey: ['posts', 'byAuthor', authorId, page, limit],
+		queryFn: () =>
+			api.get<Post[]>(
+				`/api/posts?authorId=${authorId}&page=${page}&limit=${limit}`,
+			),
+		staleTime: 30_000,
+		retry: 1,
+		enabled: !!authorId,
+	});
+}
+
 export function usePost(id: string) {
 	return useQuery({
 		queryKey: ['posts', id],

@@ -1,9 +1,12 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-import ThemeEngine from "./components/4-organisms/ThemeEngine";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import ThemeEngine from './components/4-organisms/ThemeEngine';
+import { startFaviconAnimation } from './lib/faviconAnimation';
 import './index.css';
+
+startFaviconAnimation();
 
 const queryClient = new QueryClient({
 	defaultOptions: {
@@ -14,7 +17,7 @@ const queryClient = new QueryClient({
 	},
 });
 
-const rootElement = document.getElementById("root");
+const rootElement = document.getElementById('root');
 if (rootElement) {
 	createRoot(rootElement).render(
 		<StrictMode>

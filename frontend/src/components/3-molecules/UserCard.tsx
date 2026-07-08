@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import type { UserProfile } from '../../hooks/useUser';
-import { useFollowUser, useUnfollowUser } from '../../hooks/useUser';
+import {
+	useFollowUser,
+	useIsFollowing,
+	useUnfollowUser,
+} from '../../hooks/useUser';
 import { authClient } from '../../lib/auth';
 import { cn } from '../../lib/utils';
 import { AVATAR, BORDERS, COLORS, GAP, PADDING, TYPOGRAPHY } from '../1-ions';
@@ -19,6 +23,10 @@ const UserCard = ({ user, isLoading }: UserCardProps) => {
 	const isSelf = session?.user?.id === user.id;
 	const followUser = useFollowUser(user.id);
 	const unfollowUser = useUnfollowUser(user.id);
+	const { data: followStatus } = useIsFollowing(
+		!isSelf && session?.user != null && user.id !== '' ? user.id : '',
+	);
+	const isFollowing = followStatus?.isFollowing === true;
 
 	if (isLoading) {
 		return (
@@ -96,7 +104,7 @@ const UserCard = ({ user, isLoading }: UserCardProps) => {
 						</div>
 					)}
 
-					<div className="flex items-start justify-end pt-2 pb-2 min-h-[2.5rem]">
+					<div className="flex items-start justify-end pt-2 pb-2 min-h-10">
 						{isSelf ? (
 							<button
 								type="button"
@@ -117,15 +125,23 @@ const UserCard = ({ user, isLoading }: UserCardProps) => {
 								<button
 									type="button"
 									disabled={followUser.isPending || unfollowUser.isPending}
-									onClick={() => followUser.mutate()}
+									onClick={() =>
+										isFollowing ? unfollowUser.mutate() : followUser.mutate()
+									}
 									className={cn(
-										'text-xs font-medium transition-colors',
+										'text-xs font-medium transition-colors disabled:opacity-50',
 										BORDERS.RADIUS.md,
 										PADDING.buttonSm,
-										'bg-white text-neutral-950 hover:bg-neutral-200 disabled:opacity-50',
+										isFollowing
+											? cn(
+													BORDERS.BORDER.subtle,
+													COLORS.textSecondary,
+													'hover:border-red-500 hover:text-red-400',
+												)
+											: 'bg-white text-neutral-950 hover:bg-neutral-200',
 									)}
 								>
-									Follow
+									{isFollowing ? 'Unfollow' : 'Follow'}
 								</button>
 							)
 						)}

@@ -23,6 +23,7 @@ export const COLORS = {
 
 	// Semantic
 	danger: 'text-red-400',
+	dangerBorder: 'border-red-500',
 	dangerHover: 'hover:text-red-300',
 	success: 'text-green-400',
 	verified: 'text-blue-400',

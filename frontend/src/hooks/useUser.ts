@@ -32,12 +32,30 @@ export function useSelfUser() {
 	});
 }
 
+export function useIsFollowing(targetId: string) {
+	return useQuery({
+		queryKey: ['users', targetId, 'following-status'],
+		queryFn: () =>
+			api.get<{ isFollowing: boolean }>(
+				`/api/users/${targetId}/following-status`,
+			),
+		staleTime: 30_000,
+		retry: 1,
+		enabled: !!targetId,
+	});
+}
+
 export function useFollowUser(targetId: string) {
 	const qc = useQueryClient();
 	return useMutation({
 		mutationFn: () =>
 			api.post<{ following: boolean }>(`/api/users/${targetId}/follow`),
-		onSuccess: () => qc.invalidateQueries({ queryKey: ['users', targetId] }),
+		onSuccess: () => {
+			qc.invalidateQueries({ queryKey: ['users', targetId] });
+			qc.invalidateQueries({
+				queryKey: ['users', targetId, 'following-status'],
+			});
+		},
 	});
 }
 
@@ -46,6 +64,11 @@ export function useUnfollowUser(targetId: string) {
 	return useMutation({
 		mutationFn: () =>
 			api.delete<{ following: boolean }>(`/api/users/${targetId}/follow`),
-		onSuccess: () => qc.invalidateQueries({ queryKey: ['users', targetId] }),
+		onSuccess: () => {
+			qc.invalidateQueries({ queryKey: ['users', targetId] });
+			qc.invalidateQueries({
+				queryKey: ['users', targetId, 'following-status'],
+			});
+		},
 	});
 }

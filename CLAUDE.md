@@ -6,7 +6,7 @@ Pars is a social platform (posts, follows, threads, topics) built as a monorepo:
 
 ```
 /
-├── backend/          NestJS + Prisma → PostgreSQL, better-auth sessions
+├── backend/          NestJS + Drizzle → PostgreSQL, better-auth sessions
 ├── frontend/         React 19 + Vite + TanStack Router, Tailwind CSS, Biome
 └── packages/ui/      @pars/ui — shared behavioral utilities (cn, hooks)
 ```
@@ -19,9 +19,13 @@ Pars is a social platform (posts, follows, threads, topics) built as a monorepo:
 
 ### Backend
 - **Runtime:** Bun + NestJS
-- **ORM:** Prisma (schema at `backend/prisma/schema.prisma`)
-- **Auth:** better-auth with email/password, session cookies
+- **ORM:** Drizzle ORM (`DrizzleService` via `backend/src/database/drizzle.service.ts`; schema at `backend/src/database/schema/`)
+- **Auth:** better-auth with email/password + 2FA plugin, session cookies, Drizzle adapter
+- **Cache:** Redis via ioredis (`RedisModule`) — wired globally, not yet used in API services
 - **Linting:** Biome (`unsafeParameterDecoratorsEnabled: true` for NestJS decorators)
+- **API docs:** Swagger UI available at `http://localhost:3000/api` when running in dev
+
+> **Note:** A `PrismaService` and `prisma.module.ts` exist in the codebase but are unused — all API services and better-auth use Drizzle. Do not import or extend Prisma for new features.
 
 ### Frontend
 - **Framework:** React 19 + Vite
@@ -158,6 +162,8 @@ Hooks live in `frontend/src/hooks/`:
 - **TypeScript strict mode.** No `any`. No non-null assertions (`!`) — use conditional rendering or optional chaining instead.
 - **Biome enforces a11y rules:** Interactive elements must be `<button>` or proper role elements, not plain `<div>` with click handlers.
 - Import order: Biome auto-organizes alphabetically on commit — don't fight it.
+- **Diagnose before fixing.** Read the relevant code and trace the actual root cause before making changes. Never try random edits hoping one sticks.
+- **After any frontend change:** run `bun run build` then `bun run lint` from `frontend/`. Fix all errors before considering the task done.
 
 ---
 
@@ -176,22 +182,103 @@ Husky runs on `git push`:
 ## Backend patterns
 
 - **Controllers** are thin — delegate logic to services.
-- **DTOs** use `class-validator` decorators; Prisma types are used for return shapes.
+- **DTOs** use `class-validator` decorators; Drizzle select shapes are used for return types.
 - **Guards:** `SessionAuthGuard` protects authenticated endpoints; `CurrentUser()` decorator provides the authed user.
-- Prisma select projection via `PUBLIC_SELECT` constant — don't return password hashes or internal fields.
-- `PATCH /api/users/me` — updates displayName, bio (PatchUserRegularDto)
-- `PATCH /api/users/me/important` — updates email, username, requires currentPassword
-- `POST /api/posts/:id/like` — toggle like
+- **Roles:** `RolesGuard` + `@Roles('admin' | 'moderator')` for elevated actions.
+- Do not return password hashes or internal fields — project only the fields you need in Drizzle `.select({...})`.
+
+### API endpoint reference
+
+All routes are prefixed `/api/` via the global prefix set in `main.ts`.
+
+**Users** (`/api/users`)
+- `GET /` — paginated list (`?page&limit`)
+- `GET /me` — own profile (auth required)
+- `GET /:id` — profile by id or username
+- `PATCH /me` — update displayName / bio (`PatchUserRegularDto`)
+- `PATCH /me/important` — update username / email, requires currentPassword (`PatchUserImportantDto`)
+- `PATCH /me/password` — change password (`PatchUserPasswordDto`)
+- `DELETE /me` — delete own account
+- `DELETE /:id` — admin: delete any account
+- `POST /:id/follow` — follow a user
+- `DELETE /:id/follow` — unfollow a user
+- `GET /:id/followers` — paginated followers list
+- `GET /:id/following` — paginated following list
+
+**Posts** (`/api/posts`)
+- `GET /` — paginated list
+- `GET /:id` — single post
+- `POST /` — create post (`CreatePostDto`)
+- `PATCH /:id` — edit post (`PatchPostDto`, owner or admin)
+- `DELETE /:id` — delete post (owner or admin)
+- `POST /:id/like` — toggle like
+
+**Threads** (`/api/threads`)
+- `GET /` — list (`?page&limit&topicId`)
+- `GET /:id` — single thread
+- `POST /` — create thread
+- `PATCH /:id` — edit thread (owner or admin)
+- `DELETE /:id` — delete thread (owner or admin)
+
+**Topics** (`/api/topics`)
+- `GET /` — list (default limit 50)
+- `GET /:id` — single topic
+- `POST /` — create (moderator/admin only)
+- `PATCH /:id` — edit (moderator/admin only)
+- `DELETE /:id` — delete (admin only)
+
+**Feed** (`/api/feed`)
+- `GET /` — chronological feed for the authed user (auth required, paginated)
+
+**Search** (`/api/search`)
+- `GET /?q=&type=posts|users|topics&page=&limit=` — full-text search across posts, users, or topics
+
+**Media** (`/api/media`)
+- `POST /avatar` — upload avatar image (`multipart/form-data`, field name: `file`)
+- `POST /background` — upload profile background image (`multipart/form-data`, field name: `file`)
+- `DELETE /:id` — delete a media record and its file
+
+Media files are stored locally at `backend/media/{avatar,backgroundImage}/`. Allowed types: `image/jpeg`, `image/png`, `image/gif`, `image/webp`. Returned URL format: `/media/{subdir}/{filename}`. There is no CDN or S3 — files are served directly from the NestJS static assets.
+
+### Database migrations (Drizzle Kit)
+
+```bash
+cd backend
+bunx drizzle-kit generate   # generate migration SQL from schema changes
+bunx drizzle-kit migrate    # apply pending migrations to the database
+bunx drizzle-kit studio     # open Drizzle Studio (browser DB GUI)
+```
+
+Run `generate` after any schema change in `backend/src/database/schema/`, then `migrate` to apply.
+
+---
+
+## Environment variables
+
+### Backend (create `backend/.env`)
+```
+DATABASE_URL=postgresql://user:password@localhost:5432/pars
+SESSION_SECRET=change-me-in-production-32-chars!!
+CORS_ORIGIN=http://localhost:5173
+REDIS_URL=redis://localhost:6379        # optional — defaults to localhost:6379
+```
+
+### Frontend (copy `frontend/env/.env.example` → `frontend/env/.env.development`)
+```
+VITE_API_BASE_URL=http://localhost:3000
+VITE_SOCKET_URL=http://localhost:3000
+VITE_GLITCHTIP_DSN=                    # leave empty in development
+```
 
 ---
 
 ## What's NOT done yet (known stubs)
 
 - **ForgotPasswordPage** — UI exists but `authClient.forgetPassword` is stubbed. Backend needs `sendResetPassword` configured in `auth.config.ts`.
-- **Follow/Unfollow** — frontend hooks exist; backend endpoints are on `feat/backend-follow-api` (Drizzle branch, not merged).
-- **Search** — backend has search service; frontend needs a search input + results view wired to `/api/search`.
-- **SettingsPage** — real account settings form.
+- **Search** — backend `/api/search` is fully implemented; frontend needs a search input + results view wired to it.
+- **SettingsPage** — real account settings form (PATCH /me endpoints exist).
 - **Notifications** — not implemented.
+- **WebSockets** — `VITE_SOCKET_URL` is configured but no socket server exists yet.
 
 ---
 

@@ -3,17 +3,39 @@ import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { twoFactor } from 'better-auth/plugins';
 import type { DrizzleService } from '../../database/drizzle.service';
+import {
+	accounts,
+	sessions,
+	twoFactors,
+	users,
+	verifications,
+} from '../../database/schema';
 
 type AuthInstance = ReturnType<typeof betterAuth>;
 let _auth: AuthInstance | null = null;
 
 export function initAuth(drizzle: DrizzleService): AuthInstance {
 	const instance = betterAuth({
-		database: drizzleAdapter(drizzle.db, { provider: 'pg' }),
+		database: drizzleAdapter(drizzle.db, {
+			provider: 'pg',
+			schema: {
+				user: users,
+				session: sessions,
+				account: accounts,
+				verification: verifications,
+				twoFactor: twoFactors,
+			},
+		}),
 		emailAndPassword: {
 			enabled: true,
 		},
 		plugins: [twoFactor()],
+		session: {
+			cookieCache: {
+				enabled: true,
+				maxAge: 60,
+			},
+		},
 		secret: process.env.SESSION_SECRET ?? 'change-me-in-production-32-chars!!',
 		trustedOrigins: (process.env.CORS_ORIGIN ?? 'http://localhost:5173').split(
 			',',

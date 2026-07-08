@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 4 86 88" width="64" height="64">
+
+  <!-- Confetti: left -->
+  <g><rect x="1.5" y="15" width="7" height="4.5" rx="1" fill="#FF6B6B" transform="rotate(20,5,17.25)">
+    <animateTransform attributeName="transform" type="translate" additive="sum"
+      values="0,0;0,-9;0,0" dur="2.1s" repeatCount="indefinite" calcMode="spline"
+      keySplines="0.45,0,0.55,1;0.45,0,0.55,1" keyTimes="0;0.5;1"/>
+  </rect></g>
+
+  <circle cx="3" cy="43.5" r="3.5" fill="#4ECDC4">
+    <animateTransform attributeName="transform" type="translate" additive="sum"
+      values="0,0;0,-9;0,0" dur="2.8s" begin="0.5s" repeatCount="indefinite" calcMode="spline"
+      keySplines="0.45,0,0.55,1;0.45,0,0.55,1" keyTimes="0;0.5;1"/>
+  </circle>
+
+  <!-- Confetti: right -->
+  <g><rect x="70.5" y="14" width="7" height="4.5" rx="1" fill="#FF9F43" transform="rotate(-25,74,16.25)">
+    <animateTransform attributeName="transform" type="translate" additive="sum"
+      values="0,0;0,-9;0,0" dur="2.6s" begin="0.3s" repeatCount="indefinite" calcMode="spline"
+      keySplines="0.45,0,0.55,1;0.45,0,0.55,1" keyTimes="0;0.5;1"/>
+  </rect></g>
+
+  <circle cx="75" cy="35.5" r="3.5" fill="#6C5CE7">
+    <animateTransform attributeName="transform" type="translate" additive="sum"
+      values="0,0;0,-9;0,0" dur="2.2s" begin="0.8s" repeatCount="indefinite" calcMode="spline"
+      keySplines="0.45,0,0.55,1;0.45,0,0.55,1" keyTimes="0;0.5;1"/>
+  </circle>
+
+  <polygon points="75,76 78.5,79.5 75,83 71.5,79.5" fill="#FF6B6B">
+    <animateTransform attributeName="transform" type="translate" additive="sum"
+      values="0,0;0,-9;0,0" dur="2.7s" begin="1.3s" repeatCount="indefinite" calcMode="spline"
+      keySplines="0.45,0,0.55,1;0.45,0,0.55,1" keyTimes="0;0.5;1"/>
+  </polygon>
+
+  <!-- Confetti: top / bottom -->
+  <circle cx="63" cy="17" r="3.5" fill="#FF8C94">
+    <animateTransform attributeName="transform" type="translate" additive="sum"
+      values="0,0;0,-9;0,0" dur="2.0s" begin="0.4s" repeatCount="indefinite" calcMode="spline"
+      keySplines="0.45,0,0.55,1;0.45,0,0.55,1" keyTimes="0;0.5;1"/>
+  </circle>
+
+  <circle cx="31.5" cy="86" r="3.5" fill="#FFE66D">
+    <animateTransform attributeName="transform" type="translate" additive="sum"
+      values="0,0;0,-9;0,0" dur="2.3s" begin="0.6s" repeatCount="indefinite" calcMode="spline"
+      keySplines="0.45,0,0.55,1;0.45,0,0.55,1" keyTimes="0;0.5;1"/>
+  </circle>
+
+  <!-- Confetti: extra -->
+  <g><rect x="15" y="14" width="7" height="4.5" rx="1" fill="#FFE66D" transform="rotate(15,18.5,16.25)">
+    <animateTransform attributeName="transform" type="translate" additive="sum"
+      values="0,0;0,-9;0,0" dur="2.5s" begin="1.0s" repeatCount="indefinite" calcMode="spline"
+      keySplines="0.45,0,0.55,1;0.45,0,0.55,1" keyTimes="0;0.5;1"/>
+  </rect></g>
+
+  <polygon points="2,64.5 5.5,68 2,71.5 -1.5,68" fill="#96CEB4">
+    <animateTransform attributeName="transform" type="translate" additive="sum"
+      values="0,0;0,-9;0,0" dur="2.9s" begin="0.2s" repeatCount="indefinite" calcMode="spline"
+      keySplines="0.45,0,0.55,1;0.45,0,0.55,1" keyTimes="0;0.5;1"/>
+  </polygon>
+
+  <circle cx="63" cy="87" r="3.5" fill="#A78BFA">
+    <animateTransform attributeName="transform" type="translate" additive="sum"
+      values="0,0;0,-9;0,0" dur="2.4s" begin="0.9s" repeatCount="indefinite" calcMode="spline"
+      keySplines="0.45,0,0.55,1;0.45,0,0.55,1" keyTimes="0;0.5;1"/>
+  </circle>
+
+  <circle cx="45" cy="17" r="3" fill="#FF6B6B">
+    <animateTransform attributeName="transform" type="translate" additive="sum"
+      values="0,0;0,-9;0,0" dur="1.9s" begin="1.2s" repeatCount="indefinite" calcMode="spline"
+      keySplines="0.45,0,0.55,1;0.45,0,0.55,1" keyTimes="0;0.5;1"/>
+  </circle>
+
+  <!-- P — unified single path, white -->
+  <g transform="skewX(-8) translate(3,0)">
+    <path d="M 10,16 Q 10,8 18,8 L 25,8 C 55,8 76,20 76,32 C 76,44 55,58 25,58 L 25,82 Q 25,88 19,88 L 17,88 Q 10,88 10,82 Z" fill="#FFFFFF"/>
+    <!-- smile face -->
+    <circle cx="40" cy="26" r="4" fill="#7C3AED"/>
+    <circle cx="57" cy="26" r="4" fill="#7C3AED"/>
+    <path d="M 37,41 Q 48.5,51 60,41" stroke="#7C3AED" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+  </g>
+
+</svg>

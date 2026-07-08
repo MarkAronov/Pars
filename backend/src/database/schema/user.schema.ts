@@ -46,6 +46,7 @@ export const users = pgTable('user', {
 	role: userRoleEnum('role').notNull().default('user'),
 	verified: boolean('verified').notNull().default(false),
 	settings: jsonb('settings').$type<Record<string, unknown>>().default({}),
+	twoFactorEnabled: boolean('two_factor_enabled').notNull().default(false),
 	embedding: vector('embedding', { dimensions: 1536 }),
 });
 

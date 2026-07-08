@@ -6,10 +6,10 @@ import {
 	NotFoundException,
 	UnauthorizedException,
 } from '@nestjs/common';
-// biome-ignore lint/style/useImportType: NestJS DI token — runtime usage via emitDecoratorMetadata
 import * as argon2 from 'argon2';
 import { and, eq, or, sql } from 'drizzle-orm';
-import type { DrizzleService } from '../../database/drizzle.service';
+// biome-ignore lint/style/useImportType: NestJS DI token — runtime usage via emitDecoratorMetadata
+import { DrizzleService } from '../../database/drizzle.service';
 import { accounts, follows, posts, users } from '../../database/schema';
 import type {
 	PatchUserImportantDto,
@@ -131,6 +131,24 @@ export class UserService {
 		}
 		await this.drizzle.db.delete(users).where(eq(users.id, targetId));
 		return { message: 'User deleted' };
+	}
+
+	async isFollowing(
+		requesterId: string,
+		targetId: string,
+	): Promise<{ isFollowing: boolean }> {
+		if (requesterId === targetId) return { isFollowing: false };
+		const [row] = await this.drizzle.db
+			.select({ followerId: follows.followerId })
+			.from(follows)
+			.where(
+				and(
+					eq(follows.followerId, requesterId),
+					eq(follows.followeeId, targetId),
+				),
+			)
+			.limit(1);
+		return { isFollowing: !!row };
 	}
 
 	async follow(followerId: string, followeeId: string) {

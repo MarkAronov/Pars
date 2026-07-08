@@ -1,4 +1,5 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import type { CanActivate, ExecutionContext } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import type { Request } from 'express';
 import { getAuth } from '../auth.config';
 
@@ -17,7 +18,8 @@ export class SessionAuthGuard implements CanActivate {
 		}
 
 		(req as Request & { user: unknown; sessionId: string }).user = session.user;
-		(req as Request & { user: unknown; sessionId: string }).sessionId = session.session.id;
+		(req as Request & { user: unknown; sessionId: string }).sessionId =
+			session.session.id;
 
 		return true;
 	}

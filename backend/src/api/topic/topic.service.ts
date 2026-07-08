@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-// biome-ignore lint/style/useImportType: NestJS DI token — runtime usage via emitDecoratorMetadata
 import { asc, eq } from 'drizzle-orm';
-import type { DrizzleService } from '../../database/drizzle.service';
+// biome-ignore lint/style/useImportType: NestJS DI token — runtime usage via emitDecoratorMetadata
+import { DrizzleService } from '../../database/drizzle.service';
 import { topics } from '../../database/schema';
 import type { CreateTopicDto, PatchTopicDto } from './topic.dto';
 

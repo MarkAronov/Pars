@@ -1,5 +1,6 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+// biome-ignore lint/style/useImportType: NestJS DI token — runtime usage via emitDecoratorMetadata
 import { SearchService } from './search.service';
 
 @ApiTags('search')

@@ -3,9 +3,9 @@ import {
 	Injectable,
 	NotFoundException,
 } from '@nestjs/common';
-// biome-ignore lint/style/useImportType: NestJS DI token — runtime usage via emitDecoratorMetadata
 import { desc, eq, sql } from 'drizzle-orm';
-import type { DrizzleService } from '../../database/drizzle.service';
+// biome-ignore lint/style/useImportType: NestJS DI token — runtime usage via emitDecoratorMetadata
+import { DrizzleService } from '../../database/drizzle.service';
 import { posts, threads, topics, users } from '../../database/schema';
 import type { CreateThreadDto, PatchThreadDto } from './thread.dto';
 

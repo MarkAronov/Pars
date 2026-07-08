@@ -19,7 +19,8 @@ import type {
 	PatchUserPasswordDto,
 	PatchUserRegularDto,
 } from './user.dto';
-import type { UserService } from './user.service';
+// biome-ignore lint/style/useImportType: NestJS DI token — runtime usage via emitDecoratorMetadata
+import { UserService } from './user.service';
 
 interface AuthUser {
 	id: string;
@@ -98,6 +99,13 @@ export class UserController {
 		@Param('id') targetId: string,
 	) {
 		return this.userService.deleteUser(requester.id, targetId, requester.role);
+	}
+
+	@Get(':id/following-status')
+	@UseGuards(SessionAuthGuard)
+	@ApiOperation({ summary: 'Check if authed user follows a given user' })
+	isFollowing(@CurrentUser() user: AuthUser, @Param('id') targetId: string) {
+		return this.userService.isFollowing(user.id, targetId);
 	}
 
 	@Post(':id/follow')

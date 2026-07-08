@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-// biome-ignore lint/style/useImportType: NestJS DI token — runtime usage via emitDecoratorMetadata
 import { desc, eq, inArray, sql } from 'drizzle-orm';
-import type { DrizzleService } from '../../database/drizzle.service';
+// biome-ignore lint/style/useImportType: NestJS DI token — runtime usage via emitDecoratorMetadata
+import { DrizzleService } from '../../database/drizzle.service';
 import { follows, postLikes, posts, users } from '../../database/schema';
 
 @Injectable()

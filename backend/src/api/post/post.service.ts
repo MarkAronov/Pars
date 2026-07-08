@@ -3,9 +3,9 @@ import {
 	Injectable,
 	NotFoundException,
 } from '@nestjs/common';
-// biome-ignore lint/style/useImportType: NestJS DI token — runtime usage via emitDecoratorMetadata
 import { and, desc, eq, sql } from 'drizzle-orm';
-import type { DrizzleService } from '../../database/drizzle.service';
+// biome-ignore lint/style/useImportType: NestJS DI token — runtime usage via emitDecoratorMetadata
+import { DrizzleService } from '../../database/drizzle.service';
 import { postLikes, postMentions, posts, users } from '../../database/schema';
 import type { CreatePostDto, PatchPostDto } from './post.dto';
 
@@ -67,11 +67,12 @@ function toPost(r: PostRow) {
 export class PostService {
 	constructor(private readonly drizzle: DrizzleService) {}
 
-	async findAll(page: number, limit: number) {
+	async findAll(page: number, limit: number, authorId?: string) {
 		const rows = await this.drizzle.db
 			.select(postSelect)
 			.from(posts)
 			.innerJoin(users, eq(posts.authorId, users.id))
+			.where(authorId ? eq(posts.authorId, authorId) : undefined)
 			.orderBy(desc(posts.createdAt))
 			.limit(limit)
 			.offset((page - 1) * limit);

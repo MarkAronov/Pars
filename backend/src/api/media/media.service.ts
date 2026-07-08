@@ -1,15 +1,15 @@
-import * as fs from 'node:fs/promises';
-import * as path from 'node:path';
 import {
 	BadRequestException,
 	Injectable,
 	NotFoundException,
 } from '@nestjs/common';
-// biome-ignore lint/style/useImportType: NestJS DI token — runtime usage via emitDecoratorMetadata
 import { eq } from 'drizzle-orm';
 import { fileTypeFromBuffer } from 'file-type';
-import type { DrizzleService } from '../../database/drizzle.service';
+// biome-ignore lint/style/useImportType: NestJS DI token — runtime usage via emitDecoratorMetadata
+import { DrizzleService } from '../../database/drizzle.service';
 import { media, users } from '../../database/schema';
+// biome-ignore lint/style/useImportType: NestJS DI token — runtime usage via emitDecoratorMetadata
+import { StorageService } from '../../storage/storage.service';
 
 const ALLOWED_IMAGE_MIMES = new Set([
 	'image/jpeg',
@@ -17,30 +17,20 @@ const ALLOWED_IMAGE_MIMES = new Set([
 	'image/gif',
 	'image/webp',
 ]);
-const MEDIA_ROOT = path.resolve(process.cwd(), 'media');
 
 @Injectable()
 export class MediaService {
-	constructor(private readonly drizzle: DrizzleService) {}
+	constructor(
+		private readonly drizzle: DrizzleService,
+		private readonly storage: StorageService,
+	) {}
 
-	async validateImageMime(buffer: Buffer): Promise<string> {
+	private async validateImageMime(buffer: Buffer): Promise<string> {
 		const type = await fileTypeFromBuffer(buffer);
 		if (!type || !ALLOWED_IMAGE_MIMES.has(type.mime)) {
 			throw new BadRequestException('Invalid image type');
 		}
 		return type.mime;
-	}
-
-	async saveFile(
-		buffer: Buffer,
-		filename: string,
-		subdir: string,
-	): Promise<string> {
-		const dir = path.join(MEDIA_ROOT, subdir);
-		await fs.mkdir(dir, { recursive: true });
-		const dest = path.join(dir, filename);
-		await fs.writeFile(dest, buffer);
-		return `/media/${subdir}/${filename}`;
 	}
 
 	async uploadAvatar(
@@ -49,8 +39,8 @@ export class MediaService {
 	): Promise<{ url: string }> {
 		const mimeType = await this.validateImageMime(file.buffer);
 		const ext = mimeType.split('/')[1];
-		const filename = `${uploaderId}-${Date.now()}.${ext}`;
-		const url = await this.saveFile(file.buffer, filename, 'avatar');
+		const key = `avatar/${uploaderId}-${Date.now()}.${ext}`;
+		const url = await this.storage.upload(file.buffer, key, mimeType);
 
 		await this.drizzle.db
 			.update(users)
@@ -68,8 +58,8 @@ export class MediaService {
 	): Promise<{ url: string }> {
 		const mimeType = await this.validateImageMime(file.buffer);
 		const ext = mimeType.split('/')[1];
-		const filename = `${uploaderId}-${Date.now()}.${ext}`;
-		const url = await this.saveFile(file.buffer, filename, 'backgroundImage');
+		const key = `backgroundImage/${uploaderId}-${Date.now()}.${ext}`;
+		const url = await this.storage.upload(file.buffer, key, mimeType);
 
 		await this.drizzle.db
 			.update(users)
@@ -95,11 +85,8 @@ export class MediaService {
 			.where(eq(media.id, mediaId));
 		if (!mediaRecord) throw new NotFoundException('Media not found');
 
-		const filePath = path.join(
-			MEDIA_ROOT,
-			mediaRecord.url.replace('/media/', ''),
-		);
-		await fs.unlink(filePath).catch(() => null);
+		const key = this.storage.keyFromUrl(mediaRecord.url);
+		await this.storage.delete(key);
 		await this.drizzle.db.delete(media).where(eq(media.id, mediaId));
 		return { message: 'Media deleted' };
 	}

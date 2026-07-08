@@ -1,11 +1,26 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import {
+	Body,
+	Controller,
+	Delete,
+	Get,
+	Param,
+	Patch,
+	Post,
+	Query,
+	UseGuards,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { SessionAuthGuard } from '../auth/guards/session.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { ThreadService } from './thread.service';
+import { SessionAuthGuard } from '../auth/guards/session.guard';
+// biome-ignore lint/style/useImportType: NestJS ValidationPipe needs the real class at runtime to validate/transform @Body()
 import { CreateThreadDto, PatchThreadDto } from './thread.dto';
+// biome-ignore lint/style/useImportType: NestJS DI token — runtime usage via emitDecoratorMetadata
+import { ThreadService } from './thread.service';
 
-interface AuthUser { id: string; role: string }
+interface AuthUser {
+	id: string;
+	role: string;
+}
 
 @ApiTags('threads')
 @Controller('threads')
@@ -13,7 +28,11 @@ export class ThreadController {
 	constructor(private readonly threadService: ThreadService) {}
 
 	@Get()
-	findAll(@Query('page') page = 1, @Query('limit') limit = 20, @Query('topicId') topicId?: string) {
+	findAll(
+		@Query('page') page = 1,
+		@Query('limit') limit = 20,
+		@Query('topicId') topicId?: string,
+	) {
 		return this.threadService.findAll(Number(page), Number(limit), topicId);
 	}
 
@@ -30,7 +49,11 @@ export class ThreadController {
 
 	@Patch(':id')
 	@UseGuards(SessionAuthGuard)
-	patch(@Param('id') id: string, @CurrentUser() user: AuthUser, @Body() dto: PatchThreadDto) {
+	patch(
+		@Param('id') id: string,
+		@CurrentUser() user: AuthUser,
+		@Body() dto: PatchThreadDto,
+	) {
 		return this.threadService.patch(id, user.id, user.role, dto);
 	}
 

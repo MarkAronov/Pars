@@ -1,15 +1,15 @@
 import { Inject, Logger } from '@nestjs/common';
-import {
-	WebSocketGateway,
-	WebSocketServer,
-	OnGatewayInit,
-} from '@nestjs/websockets';
-import { Server } from 'socket.io';
+import type { OnGatewayInit } from '@nestjs/websockets';
+import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { createAdapter } from '@socket.io/redis-adapter';
 import type Redis from 'ioredis';
+import type { Server } from 'socket.io';
 import { REDIS_CLIENT } from '../database/redis.module';
 
-@WebSocketGateway({ namespace: '/feed', cors: { origin: process.env.CORS_ORIGIN, credentials: true } })
+@WebSocketGateway({
+	namespace: '/feed',
+	cors: { origin: process.env.CORS_ORIGIN, credentials: true },
+})
 export class FeedGateway implements OnGatewayInit {
 	@WebSocketServer() server!: Server;
 	private readonly logger = new Logger(FeedGateway.name);

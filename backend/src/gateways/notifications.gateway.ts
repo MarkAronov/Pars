@@ -1,14 +1,17 @@
 import { Logger } from '@nestjs/common';
 import {
+	ConnectedSocket,
+	MessageBody,
+	SubscribeMessage,
 	WebSocketGateway,
 	WebSocketServer,
-	SubscribeMessage,
-	MessageBody,
-	ConnectedSocket,
 } from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
+import type { Server, Socket } from 'socket.io';
 
-@WebSocketGateway({ namespace: '/notifications', cors: { origin: process.env.CORS_ORIGIN, credentials: true } })
+@WebSocketGateway({
+	namespace: '/notifications',
+	cors: { origin: process.env.CORS_ORIGIN, credentials: true },
+})
 export class NotificationsGateway {
 	@WebSocketServer() server!: Server;
 	private readonly logger = new Logger(NotificationsGateway.name);

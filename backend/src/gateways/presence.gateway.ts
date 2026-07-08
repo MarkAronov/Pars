@@ -1,18 +1,22 @@
 import { Inject, Logger } from '@nestjs/common';
-import {
-	WebSocketGateway,
-	WebSocketServer,
+import type {
 	OnGatewayConnection,
 	OnGatewayDisconnect,
 } from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
+import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import type Redis from 'ioredis';
+import type { Server, Socket } from 'socket.io';
 import { REDIS_CLIENT } from '../database/redis.module';
 
 const PRESENCE_TTL = 300; // seconds
 
-@WebSocketGateway({ namespace: '/presence', cors: { origin: process.env.CORS_ORIGIN, credentials: true } })
-export class PresenceGateway implements OnGatewayConnection, OnGatewayDisconnect {
+@WebSocketGateway({
+	namespace: '/presence',
+	cors: { origin: process.env.CORS_ORIGIN, credentials: true },
+})
+export class PresenceGateway
+	implements OnGatewayConnection, OnGatewayDisconnect
+{
 	@WebSocketServer() server!: Server;
 	private readonly logger = new Logger(PresenceGateway.name);
 

@@ -1,11 +1,27 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import {
+	Body,
+	Controller,
+	Delete,
+	Get,
+	HttpCode,
+	Param,
+	Patch,
+	Post,
+	Query,
+	UseGuards,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { SessionAuthGuard } from '../auth/guards/session.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { PostService } from './post.service';
+import { SessionAuthGuard } from '../auth/guards/session.guard';
+// biome-ignore lint/style/useImportType: NestJS ValidationPipe needs the real class at runtime to validate/transform @Body()
 import { CreatePostDto, PatchPostDto } from './post.dto';
+// biome-ignore lint/style/useImportType: NestJS DI token — runtime usage via emitDecoratorMetadata
+import { PostService } from './post.service';
 
-interface AuthUser { id: string; role: string }
+interface AuthUser {
+	id: string;
+	role: string;
+}
 
 @ApiTags('posts')
 @Controller('posts')
@@ -13,8 +29,12 @@ export class PostController {
 	constructor(private readonly postService: PostService) {}
 
 	@Get()
-	findAll(@Query('page') page = 1, @Query('limit') limit = 20) {
-		return this.postService.findAll(Number(page), Number(limit));
+	findAll(
+		@Query('page') page = 1,
+		@Query('limit') limit = 20,
+		@Query('authorId') authorId?: string,
+	) {
+		return this.postService.findAll(Number(page), Number(limit), authorId);
 	}
 
 	@Get(':id')
@@ -31,7 +51,11 @@ export class PostController {
 
 	@Patch(':id')
 	@UseGuards(SessionAuthGuard)
-	patch(@Param('id') id: string, @CurrentUser() user: AuthUser, @Body() dto: PatchPostDto) {
+	patch(
+		@Param('id') id: string,
+		@CurrentUser() user: AuthUser,
+		@Body() dto: PatchPostDto,
+	) {
 		return this.postService.patch(id, user.id, user.role, dto);
 	}
 

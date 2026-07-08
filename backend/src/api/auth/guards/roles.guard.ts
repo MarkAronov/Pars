@@ -1,4 +1,6 @@
-import { CanActivate, ExecutionContext, ForbiddenException, Injectable, SetMetadata } from '@nestjs/common';
+import type { CanActivate, ExecutionContext } from '@nestjs/common';
+import { ForbiddenException, Injectable, SetMetadata } from '@nestjs/common';
+// biome-ignore lint/style/useImportType: NestJS DI token — runtime usage via emitDecoratorMetadata
 import { Reflector } from '@nestjs/core';
 
 export const ROLES_KEY = 'roles';
@@ -15,7 +17,9 @@ export class RolesGuard implements CanActivate {
 		]);
 		if (!required?.length) return true;
 
-		const { user } = context.switchToHttp().getRequest<{ user: { role: string } }>();
+		const { user } = context
+			.switchToHttp()
+			.getRequest<{ user: { role: string } }>();
 		if (!required.includes(user?.role)) {
 			throw new ForbiddenException('Insufficient role');
 		}

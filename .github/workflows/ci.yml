@@ -86,7 +86,6 @@ jobs:
         working-directory: backend-nestjs
     steps:
       - uses: actions/checkout@v4
-        with:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
@@ -112,7 +111,6 @@ jobs:
         working-directory: frontend
     steps:
       - uses: actions/checkout@v4
-        with:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
@@ -137,7 +135,6 @@ jobs:
         working-directory: frontend
     steps:
       - uses: actions/checkout@v4
-        with:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest

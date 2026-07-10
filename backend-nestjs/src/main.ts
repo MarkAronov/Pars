@@ -6,7 +6,10 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
+import type Redis from 'ioredis';
 import { AppModule } from './app.module';
+import { REDIS_CLIENT } from './database/redis.module';
+import { RedisIoAdapter } from './gateways/redis-io.adapter';
 
 const bootstrap = async () => {
 	const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -15,6 +18,12 @@ const bootstrap = async () => {
 	app.use(helmet());
 	app.use(cookieParser());
 	app.use(compression());
+
+	// Cross-instance Socket.IO pub/sub — set once here for every namespaced
+	// gateway, since a namespace's own afterInit() can't set the adapter itself.
+	app.useWebSocketAdapter(
+		new RedisIoAdapter(app, app.get<Redis>(REDIS_CLIENT)),
+	);
 
 	// CORS — credentials required for httpOnly cookie sessions
 	app.enableCors({

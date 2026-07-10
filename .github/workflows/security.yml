@@ -99,7 +99,6 @@ jobs:
     if: ${{ needs.flags.outputs.skip_docker_scan != 'true' }}
     steps:
       - uses: actions/checkout@v4
-        with:
       - name: Build Docker image
         run: docker build -t pars-backend:${{ github.sha }} .
         working-directory: backend-nestjs
@@ -139,7 +138,6 @@ jobs:
         language: ["javascript-typescript"]
     steps:
       - uses: actions/checkout@v4
-        with:
       - uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
@@ -159,7 +157,6 @@ jobs:
     if: github.event_name == 'pull_request' && needs.flags.outputs.skip_dependency_review != 'true'
     steps:
       - uses: actions/checkout@v4
-        with:
       - uses: actions/dependency-review-action@v4
         with:
           fail-on-severity: moderate
@@ -176,7 +173,6 @@ jobs:
     if: ${{ needs.flags.outputs.skip_nuclei != 'true' }}
     steps:
       - uses: actions/checkout@v4
-        with:
       - name: Setup Nuclei
         uses: projectdiscovery/setup-nuclei@v3
         with:

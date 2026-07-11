@@ -1,0 +1,17 @@
+{
+	"name": "search-typesense-demo",
+	"private": true,
+	"version": "1.0.0",
+	"type": "module",
+	"scripts": {
+		"demo": "bun demo/semantic-search-demo.ts"
+	},
+	"dependencies": {
+		"@langchain/community": "^0.3.0",
+		"@langchain/core": "^0.3.0",
+		"typesense": "^1.8.0"
+	},
+	"devDependencies": {
+		"@types/node": "^22.0.0"
+	}
+}

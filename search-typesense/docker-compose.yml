@@ -1,0 +1,24 @@
+services:
+  typesense:
+    image: typesense/typesense:27.1
+    ports:
+      - '8108:8108'
+    volumes:
+      - typesense_data:/data
+    environment:
+      TYPESENSE_API_KEY: ${TYPESENSE_API_KEY:-pars-dev-key}
+      TYPESENSE_DATA_DIR: /data
+    healthcheck:
+      # No curl/wget in this image — use bash's /dev/tcp directly (CMD, not
+      # CMD-SHELL, since /bin/sh here is dash, which lacks /dev/tcp support).
+      test:
+        - CMD
+        - bash
+        - -c
+        - exec 3<>/dev/tcp/127.0.0.1/8108 && printf "GET /health HTTP/1.0\r\n\r\n" >&3 && grep -q 200 <&3
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  typesense_data:

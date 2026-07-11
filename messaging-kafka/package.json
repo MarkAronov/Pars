@@ -1,0 +1,21 @@
+{
+	"name": "messaging-kafka-demo",
+	"private": true,
+	"version": "1.0.0",
+	"type": "module",
+	"scripts": {
+		"demo:kafka": "bun demo/kafka-demo.ts",
+		"demo:rabbitmq": "bun demo/rabbitmq-demo.ts",
+		"demo:bullmq": "bun demo/bullmq-demo.ts"
+	},
+	"dependencies": {
+		"amqplib": "^0.10.0",
+		"bullmq": "^5.0.0",
+		"ioredis": "^5.0.0",
+		"kafkajs": "^2.2.4"
+	},
+	"devDependencies": {
+		"@types/amqplib": "^0.10.0",
+		"@types/node": "^22.0.0"
+	}
+}

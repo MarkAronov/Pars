@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { getApp } from '../database';
+import { getApp } from '../../database';
 import request from 'supertest';
 
 describe('DELETE /api/users/me', () => {

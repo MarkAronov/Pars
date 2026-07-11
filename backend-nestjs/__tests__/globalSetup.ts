@@ -22,6 +22,7 @@ export async function setup() {
 	process.env.SESSION_SECRET = 'test-secret-at-least-32-chars-long!!';
 	process.env.CORS_ORIGIN = 'http://localhost:5173';
 	process.env.PORT = '0';
+	process.env.STORAGE_DRIVER = 'local';
 
 	// Enable pgvector extension before schema push
 	const sql = postgres(databaseUrl);

@@ -38,6 +38,7 @@ beforeAll(async () => {
 	app.useGlobalPipes(
 		new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),
 	);
+	app.setGlobalPrefix('api');
 	await app.init();
 
 	drizzle = moduleRef.get(DrizzleService);

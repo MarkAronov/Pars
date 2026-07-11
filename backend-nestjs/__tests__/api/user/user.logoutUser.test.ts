@@ -1,5 +1,5 @@
 import { describe, it, beforeAll } from 'vitest';
-import { getApp } from '../database';
+import { getApp } from '../../database';
 import request from 'supertest';
 
 describe('POST /api/auth/sign-out', () => {

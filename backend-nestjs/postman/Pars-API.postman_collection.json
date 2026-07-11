@@ -1,0 +1,648 @@
+{
+	"info": {
+		"name": "Pars API",
+		"description": "Full API coverage for the Pars backend (backend-nestjs). Uses Postman's built-in cookie jar for session auth — run requests top-to-bottom within a folder (e.g. Auth > Sign Up, then Sign In) so the session cookie is set before hitting guarded endpoints. Collection variables (postId, threadId, topicId, userIdB, mediaId) are populated automatically by test scripts as you run through the requests, so later requests (Get Post, Patch Thread, etc.) can reference the IDs created earlier.\n\nNote: Topic create/patch/delete require a moderator/admin role, and there's no API endpoint to promote a user — you'll need to set `role` directly in the database for the signed-in user before those requests will succeed (they're included for completeness and will 403 otherwise, which is itself a useful check).\n\nMedia upload requests need a file attached manually in Postman's Body > form-data tab (`file` field) since collection JSON can't embed binary attachments.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{ "key": "baseUrl", "value": "http://localhost:3000" },
+		{ "key": "corsOrigin", "value": "http://localhost:5173" },
+		{ "key": "userAEmail", "value": "" },
+		{ "key": "userIdB", "value": "" },
+		{ "key": "postId", "value": "" },
+		{ "key": "topicId", "value": "" },
+		{ "key": "threadId", "value": "" },
+		{ "key": "mediaId", "value": "" }
+	],
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Sign Up (User A)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Origin", "value": "{{corsOrigin}}" }
+						],
+						"url": "{{baseUrl}}/api/auth/sign-up/email",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"user-a-{{$timestamp}}@example.com\",\n  \"password\": \"P@ssw0rd123!\",\n  \"name\": \"User A\"\n}"
+						},
+						"description": "Uses a timestamped email so the collection can be re-run against the same database without hitting a duplicate-email conflict."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('status is 200', () => pm.response.to.have.status(200));",
+									"pm.test('has user id', () => pm.expect(pm.response.json().user).to.have.property('id'));",
+									"if (pm.response.code === 200) pm.collectionVariables.set('userAEmail', pm.response.json().user.email);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Sign Up (User B)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Origin", "value": "{{corsOrigin}}" }
+						],
+						"url": "{{baseUrl}}/api/auth/sign-up/email",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"user-b-{{$timestamp}}@example.com\",\n  \"password\": \"P@ssw0rd123!\",\n  \"name\": \"User B\"\n}"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('status is 200', () => pm.response.to.have.status(200));",
+									"if (pm.response.code === 200) pm.collectionVariables.set('userIdB', pm.response.json().user.id);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Sign In (User A)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Origin", "value": "{{corsOrigin}}" }
+						],
+						"url": "{{baseUrl}}/api/auth/sign-in/email",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{userAEmail}}\",\n  \"password\": \"P@ssw0rd123!\"\n}"
+						},
+						"description": "Postman's cookie jar stores the session cookie automatically — subsequent requests to the same baseUrl are authenticated as User A until Sign Out or Sign In (User B) is run. Run Sign Up (User A) first so {{userAEmail}} is populated. The Origin header is required — better-auth rejects state-changing auth requests (sign-in/sign-out) without a trusted origin, and Postman doesn't send one by default like a browser would."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test('status is 200', () => pm.response.to.have.status(200));"]
+							}
+						}
+					]
+				},
+				{
+					"name": "Get Session",
+					"request": {
+						"method": "GET",
+						"url": "{{baseUrl}}/api/auth/get-session"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test('status is 200', () => pm.response.to.have.status(200));"]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "List Users",
+					"request": { "method": "GET", "url": "{{baseUrl}}/api/users?page=1&limit=20" },
+					"event": [
+						{
+							"listen": "test",
+							"script": { "type": "text/javascript", "exec": ["pm.test('status is 200', () => pm.response.to.have.status(200));"] }
+						}
+					]
+				},
+				{
+					"name": "Get Me",
+					"request": { "method": "GET", "url": "{{baseUrl}}/api/users/me" },
+					"event": [
+						{
+							"listen": "test",
+							"script": { "type": "text/javascript", "exec": ["pm.test('status is 200', () => pm.response.to.have.status(200));"] }
+						}
+					]
+				},
+				{
+					"name": "Get User by Id",
+					"request": { "method": "GET", "url": "{{baseUrl}}/api/users/{{userIdB}}" },
+					"event": [
+						{
+							"listen": "test",
+							"script": { "type": "text/javascript", "exec": ["pm.test('status is 200', () => pm.response.to.have.status(200));"] }
+						}
+					]
+				},
+				{
+					"name": "Patch Me (regular)",
+					"request": {
+						"method": "PATCH",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"url": "{{baseUrl}}/api/users/me",
+						"body": { "mode": "raw", "raw": "{\n  \"displayName\": \"User A Display\",\n  \"bio\": \"Hello from Postman\"\n}" }
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": { "type": "text/javascript", "exec": ["pm.test('status is 200', () => pm.response.to.have.status(200));"] }
+						}
+					]
+				},
+				{
+					"name": "Patch Me (important)",
+					"request": {
+						"method": "PATCH",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"url": "{{baseUrl}}/api/users/me/important",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"user-a-{{$timestamp}}\",\n  \"currentPassword\": \"P@ssw0rd123!\"\n}"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": { "type": "text/javascript", "exec": ["pm.test('status is 200', () => pm.response.to.have.status(200));"] }
+						}
+					]
+				},
+				{
+					"name": "Patch Me (password)",
+					"request": {
+						"method": "PATCH",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"url": "{{baseUrl}}/api/users/me/password",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"currentPassword\": \"P@ssw0rd123!\",\n  \"newPassword\": \"NewP@ssw0rd456!\"\n}"
+						},
+						"description": "Changes User A's password — re-run Sign In with the new password afterward if you continue the collection."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": { "type": "text/javascript", "exec": ["pm.test('status is 200', () => pm.response.to.have.status(200));"] }
+						}
+					]
+				},
+				{
+					"name": "Follow User B",
+					"request": { "method": "POST", "url": "{{baseUrl}}/api/users/{{userIdB}}/follow" },
+					"event": [
+						{
+							"listen": "test",
+							"script": { "type": "text/javascript", "exec": ["pm.test('status is 200', () => pm.response.to.have.status(200));"] }
+						}
+					]
+				},
+				{
+					"name": "Following Status (User B)",
+					"request": { "method": "GET", "url": "{{baseUrl}}/api/users/{{userIdB}}/following-status" },
+					"event": [
+						{
+							"listen": "test",
+							"script": { "type": "text/javascript", "exec": ["pm.test('status is 200', () => pm.response.to.have.status(200));"] }
+						}
+					]
+				},
+				{
+					"name": "Get Followers (User B)",
+					"request": { "method": "GET", "url": "{{baseUrl}}/api/users/{{userIdB}}/followers" },
+					"event": [
+						{
+							"listen": "test",
+							"script": { "type": "text/javascript", "exec": ["pm.test('status is 200', () => pm.response.to.have.status(200));"] }
+						}
+					]
+				},
+				{
+					"name": "Get Following (Me)",
+					"request": { "method": "GET", "url": "{{baseUrl}}/api/users/me/following" },
+					"event": [
+						{
+							"listen": "test",
+							"script": { "type": "text/javascript", "exec": ["pm.test('status is 200', () => pm.response.to.have.status(200));"] }
+						}
+					]
+				},
+				{
+					"name": "Unfollow User B",
+					"request": { "method": "DELETE", "url": "{{baseUrl}}/api/users/{{userIdB}}/follow" },
+					"event": [
+						{
+							"listen": "test",
+							"script": { "type": "text/javascript", "exec": ["pm.test('status is 200', () => pm.response.to.have.status(200));"] }
+						}
+					]
+				},
+				{
+					"name": "Delete User (admin only)",
+					"request": { "method": "DELETE", "url": "{{baseUrl}}/api/users/{{userIdB}}" },
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test('status is 200 or 403 (needs admin role)', () => pm.expect([200, 403]).to.include(pm.response.code));"]
+							}
+						}
+					]
+				},
+				{
+					"name": "Delete Me",
+					"request": { "method": "DELETE", "url": "{{baseUrl}}/api/users/me" },
+					"event": [
+						{
+							"listen": "test",
+							"script": { "type": "text/javascript", "exec": ["pm.test('status is 200', () => pm.response.to.have.status(200));"] }
+						}
+					],
+					"description": "Destructive — deletes the currently signed-in account. Placed last deliberately; re-run Sign Up/Sign In to continue using the collection afterward."
+				}
+			]
+		},
+		{
+			"name": "Topics",
+			"item": [
+				{
+					"name": "List Topics",
+					"request": { "method": "GET", "url": "{{baseUrl}}/api/topics?page=1&limit=50" },
+					"event": [
+						{
+							"listen": "test",
+							"script": { "type": "text/javascript", "exec": ["pm.test('status is 200', () => pm.response.to.have.status(200));"] }
+						}
+					]
+				},
+				{
+					"name": "Create Topic (moderator/admin only)",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"url": "{{baseUrl}}/api/topics",
+						"body": { "mode": "raw", "raw": "{\n  \"name\": \"Announcements\",\n  \"description\": \"Site news and updates\"\n}" }
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('status is 201 or 403 (needs moderator/admin role)', () => pm.expect([201, 403]).to.include(pm.response.code));",
+									"if (pm.response.code === 201) pm.collectionVariables.set('topicId', pm.response.json().id);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Get Topic by Id",
+					"request": { "method": "GET", "url": "{{baseUrl}}/api/topics/{{topicId}}" },
+					"event": [
+						{
+							"listen": "test",
+							"script": { "type": "text/javascript", "exec": ["pm.test('status is 200 or 404', () => pm.expect([200, 404]).to.include(pm.response.code));"] }
+						}
+					]
+				},
+				{
+					"name": "Patch Topic (moderator/admin only)",
+					"request": {
+						"method": "PATCH",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"url": "{{baseUrl}}/api/topics/{{topicId}}",
+						"body": { "mode": "raw", "raw": "{\n  \"description\": \"Updated description\"\n}" }
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test('status is 200 or 403/404', () => pm.expect([200, 403, 404]).to.include(pm.response.code));"]
+							}
+						}
+					]
+				},
+				{
+					"name": "Delete Topic (admin only)",
+					"request": { "method": "DELETE", "url": "{{baseUrl}}/api/topics/{{topicId}}" },
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test('status is 200 or 403/404', () => pm.expect([200, 403, 404]).to.include(pm.response.code));"]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Threads",
+			"item": [
+				{
+					"name": "Create Thread",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"url": "{{baseUrl}}/api/threads",
+						"body": { "mode": "raw", "raw": "{\n  \"title\": \"Welcome thread\",\n  \"topicId\": \"{{topicId}}\"\n}" },
+						"description": "Requires an existing topicId — run Topics > Create Topic first (needs moderator/admin role)."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('status is 201', () => pm.response.to.have.status(201));",
+									"if (pm.response.code === 201) pm.collectionVariables.set('threadId', pm.response.json().id);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "List Threads",
+					"request": { "method": "GET", "url": "{{baseUrl}}/api/threads?page=1&limit=20&topicId={{topicId}}" },
+					"event": [
+						{
+							"listen": "test",
+							"script": { "type": "text/javascript", "exec": ["pm.test('status is 200', () => pm.response.to.have.status(200));"] }
+						}
+					]
+				},
+				{
+					"name": "Get Thread by Id",
+					"request": { "method": "GET", "url": "{{baseUrl}}/api/threads/{{threadId}}" },
+					"event": [
+						{
+							"listen": "test",
+							"script": { "type": "text/javascript", "exec": ["pm.test('status is 200', () => pm.response.to.have.status(200));"] }
+						}
+					]
+				},
+				{
+					"name": "Patch Thread",
+					"request": {
+						"method": "PATCH",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"url": "{{baseUrl}}/api/threads/{{threadId}}",
+						"body": { "mode": "raw", "raw": "{\n  \"title\": \"Updated thread title\"\n}" }
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": { "type": "text/javascript", "exec": ["pm.test('status is 200', () => pm.response.to.have.status(200));"] }
+						}
+					]
+				},
+				{
+					"name": "Delete Thread",
+					"request": { "method": "DELETE", "url": "{{baseUrl}}/api/threads/{{threadId}}" },
+					"event": [
+						{
+							"listen": "test",
+							"script": { "type": "text/javascript", "exec": ["pm.test('status is 200', () => pm.response.to.have.status(200));"] }
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Posts",
+			"item": [
+				{
+					"name": "Create Post",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"url": "{{baseUrl}}/api/posts",
+						"body": { "mode": "raw", "raw": "{\n  \"content\": \"Hello from Postman!\"\n}" }
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('status is 201', () => pm.response.to.have.status(201));",
+									"if (pm.response.code === 201) pm.collectionVariables.set('postId', pm.response.json().id);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "List Posts",
+					"request": { "method": "GET", "url": "{{baseUrl}}/api/posts?page=1&limit=20" },
+					"event": [
+						{
+							"listen": "test",
+							"script": { "type": "text/javascript", "exec": ["pm.test('status is 200', () => pm.response.to.have.status(200));"] }
+						}
+					]
+				},
+				{
+					"name": "Get Post by Id",
+					"request": { "method": "GET", "url": "{{baseUrl}}/api/posts/{{postId}}" },
+					"event": [
+						{
+							"listen": "test",
+							"script": { "type": "text/javascript", "exec": ["pm.test('status is 200', () => pm.response.to.have.status(200));"] }
+						}
+					]
+				},
+				{
+					"name": "Patch Post",
+					"request": {
+						"method": "PATCH",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"url": "{{baseUrl}}/api/posts/{{postId}}",
+						"body": { "mode": "raw", "raw": "{\n  \"content\": \"Edited via Postman\"\n}" }
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": { "type": "text/javascript", "exec": ["pm.test('status is 200', () => pm.response.to.have.status(200));"] }
+						}
+					]
+				},
+				{
+					"name": "Like Post (toggle)",
+					"request": { "method": "POST", "url": "{{baseUrl}}/api/posts/{{postId}}/like" },
+					"event": [
+						{
+							"listen": "test",
+							"script": { "type": "text/javascript", "exec": ["pm.test('status is 201', () => pm.response.to.have.status(201));"] }
+						}
+					]
+				},
+				{
+					"name": "Delete Post",
+					"request": { "method": "DELETE", "url": "{{baseUrl}}/api/posts/{{postId}}" },
+					"event": [
+						{
+							"listen": "test",
+							"script": { "type": "text/javascript", "exec": ["pm.test('status is 200', () => pm.response.to.have.status(200));"] }
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Feed",
+			"item": [
+				{
+					"name": "Get Feed",
+					"request": { "method": "GET", "url": "{{baseUrl}}/api/feed?page=1&limit=20" },
+					"event": [
+						{
+							"listen": "test",
+							"script": { "type": "text/javascript", "exec": ["pm.test('status is 200', () => pm.response.to.have.status(200));"] }
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Search",
+			"item": [
+				{
+					"name": "Search Posts",
+					"request": { "method": "GET", "url": "{{baseUrl}}/api/search?q=hello&type=posts&page=1&limit=20" },
+					"event": [
+						{
+							"listen": "test",
+							"script": { "type": "text/javascript", "exec": ["pm.test('status is 200', () => pm.response.to.have.status(200));"] }
+						}
+					]
+				},
+				{
+					"name": "Search Users",
+					"request": { "method": "GET", "url": "{{baseUrl}}/api/search?q=user&type=users&page=1&limit=20" },
+					"event": [
+						{
+							"listen": "test",
+							"script": { "type": "text/javascript", "exec": ["pm.test('status is 200', () => pm.response.to.have.status(200));"] }
+						}
+					]
+				},
+				{
+					"name": "Search Topics",
+					"request": { "method": "GET", "url": "{{baseUrl}}/api/search?q=announce&type=topics&page=1&limit=20" },
+					"event": [
+						{
+							"listen": "test",
+							"script": { "type": "text/javascript", "exec": ["pm.test('status is 200', () => pm.response.to.have.status(200));"] }
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Media",
+			"item": [
+				{
+					"name": "Upload Avatar",
+					"request": {
+						"method": "POST",
+						"url": "{{baseUrl}}/api/media/avatar",
+						"body": {
+							"mode": "formdata",
+							"formdata": [{ "key": "file", "type": "file", "src": [] }]
+						},
+						"description": "Attach an image file (jpeg/png/gif/webp) to the `file` field in Postman's Body > form-data tab before sending — file attachments can't be embedded in exported collection JSON."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('status is 201', () => pm.response.to.have.status(201));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Upload Background",
+					"request": {
+						"method": "POST",
+						"url": "{{baseUrl}}/api/media/background",
+						"body": {
+							"mode": "formdata",
+							"formdata": [{ "key": "file", "type": "file", "src": [] }]
+						},
+						"description": "Attach an image file to the `file` field in Postman's Body > form-data tab before sending."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": { "type": "text/javascript", "exec": ["pm.test('status is 201', () => pm.response.to.have.status(201));"] }
+						}
+					]
+				},
+				{
+					"name": "Delete Media",
+					"request": {
+						"method": "DELETE",
+						"url": "{{baseUrl}}/api/media/{{mediaId}}",
+						"description": "Upload responses only return { url }, not the media record's id — set the mediaId collection variable manually (e.g. by inspecting the DB after upload) before running this."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test('status is 200 or 404', () => pm.expect([200, 404]).to.include(pm.response.code));"]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Session Cleanup",
+			"item": [
+				{
+					"name": "Sign Out",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Origin", "value": "{{corsOrigin}}" }],
+						"url": "{{baseUrl}}/api/auth/sign-out"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test('status is 200', () => pm.response.to.have.status(200));"]
+							}
+						}
+					],
+					"description": "Kept in its own trailing folder rather than inside Auth — every other folder needs the session Auth > Sign In establishes, so signing out has to be the last thing that runs in a full top-to-bottom pass."
+				}
+			]
+		}
+	]
+}

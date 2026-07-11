@@ -9,11 +9,11 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiConsumes, ApiTags } from '@nestjs/swagger';
+// biome-ignore lint/style/useImportType: NestJS DI token — runtime usage via emitDecoratorMetadata
+import { MediaService } from '@pars/db-adapters';
 import { memoryStorage } from 'multer';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { SessionAuthGuard } from '../auth/guards/session.guard';
-// biome-ignore lint/style/useImportType: NestJS DI token — runtime usage via emitDecoratorMetadata
-import { MediaService } from './media.service';
 
 interface AuthUser {
 	id: string;
@@ -49,7 +49,7 @@ export class MediaController {
 
 	@Delete(':id')
 	@UseGuards(SessionAuthGuard)
-	deleteMedia(@Param('id') id: string, @CurrentUser() user: AuthUser) {
-		return this.mediaService.deleteMedia(id, user.id);
+	deleteMedia(@Param('id') id: string, @CurrentUser() _user: AuthUser) {
+		return this.mediaService.deleteMedia(id);
 	}
 }

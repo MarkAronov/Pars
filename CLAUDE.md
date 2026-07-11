@@ -6,9 +6,13 @@ Pars is a social platform (posts, follows, threads, topics) built as a monorepo:
 
 ```
 /
-├── backend/          NestJS + Drizzle → PostgreSQL, better-auth sessions
-├── frontend/         React 19 + Vite + TanStack Router, Tailwind CSS, Biome
-└── packages/ui/      @pars/ui — shared behavioral utilities (cn, hooks)
+├── backend-nestjs/          NestJS + Drizzle → PostgreSQL, better-auth sessions
+├── frontend/                React 19 + Vite + TanStack Router, Tailwind CSS, Biome
+└── packages/
+    ├── ui/                  @pars/ui — shared behavioral utilities (cn, hooks)
+    └── db-adapters/         @pars/db-adapters — shared Drizzle schema, repository
+                             interfaces/Postgres adapters, and framework-agnostic
+                             services used by backend-nestjs (and future backends)
 ```
 
 **Package manager:** Bun everywhere. Never use npm, yarn, or pnpm.
@@ -242,14 +246,19 @@ Media files are stored locally at `backend/media/{avatar,backgroundImage}/`. All
 
 ### Database migrations (Drizzle Kit)
 
+The Drizzle schema, `drizzle.config.ts`, and migration SQL live in `packages/db-adapters/` (shared across backends), not in `backend-nestjs/`.
+
 ```bash
-cd backend
+cd packages/db-adapters
 bunx drizzle-kit generate   # generate migration SQL from schema changes
 bunx drizzle-kit migrate    # apply pending migrations to the database
 bunx drizzle-kit studio     # open Drizzle Studio (browser DB GUI)
 ```
 
-Run `generate` after any schema change in `backend/src/database/schema/`, then `migrate` to apply.
+Or from repo root: `bun run db:generate` / `bun run db:migrate` / `bun run db:studio`.
+Or from `backend-nestjs/`: `bun run db:generate` etc. (proxies into `../packages/db-adapters`).
+
+Run `generate` after any schema change in `packages/db-adapters/src/schema/`, then `migrate` to apply.
 
 ---
 

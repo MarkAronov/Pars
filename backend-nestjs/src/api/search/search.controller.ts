@@ -1,7 +1,7 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 // biome-ignore lint/style/useImportType: NestJS DI token — runtime usage via emitDecoratorMetadata
-import { SearchService } from './search.service';
+import { SearchService } from '@pars/db-adapters';
 
 @ApiTags('search')
 @Controller('search')
@@ -15,6 +15,6 @@ export class SearchController {
 		@Query('page') page = 1,
 		@Query('limit') limit = 20,
 	) {
-		return this.searchService.search(q, type, Number(page), Number(limit));
+		return this.searchService.searchAll(q, type, Number(page), Number(limit));
 	}
 }

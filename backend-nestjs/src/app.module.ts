@@ -10,6 +10,7 @@ import { SearchModule } from './api/search/search.module';
 import { ThreadModule } from './api/thread/thread.module';
 import { TopicModule } from './api/topic/topic.module';
 import { UserModule } from './api/user/user.module';
+import { DatabaseModule } from './database/database.module';
 import { DrizzleModule } from './database/drizzle.module';
 import { RedisModule } from './database/redis.module';
 import { FeedGateway } from './gateways/feed.gateway';
@@ -24,6 +25,7 @@ import { StorageModule } from './storage/storage.module';
 		DrizzleModule,
 		RedisModule,
 		StorageModule,
+		DatabaseModule,
 		AuthModule,
 		UserModule,
 		PostModule,

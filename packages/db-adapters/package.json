@@ -1,0 +1,32 @@
+{
+	"name": "@pars/db-adapters",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"description": "Shared repository interfaces, Postgres adapters, and framework-agnostic services for Pars backends",
+	"author": "Mark Aronov",
+	"license": "MIT",
+	"exports": {
+		".": "./src/index.ts",
+		"./schema": "./src/schema/index.ts"
+	},
+	"scripts": {
+		"db:generate": "drizzle-kit generate",
+		"db:migrate": "drizzle-kit migrate",
+		"db:studio": "drizzle-kit studio",
+		"db:push": "drizzle-kit push"
+	},
+	"dependencies": {
+		"@nestjs/common": "^11.0.0",
+		"argon2": "^0.43.0",
+		"class-validator": "^0.14.0",
+		"drizzle-orm": "^0.43.0",
+		"file-type": "^22.0.1",
+		"postgres": "^3.4.5"
+	},
+	"devDependencies": {
+		"@types/node": "^22.0.0",
+		"drizzle-kit": "^0.31.0",
+		"typescript": "~5.8.3"
+	}
+}

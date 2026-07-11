@@ -10,12 +10,10 @@ import {
 	UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+// biome-ignore lint/style/useImportType: NestJS ValidationPipe needs the real class at runtime to validate/transform @Body()
+import { CreateTopicDto, PatchTopicDto, TopicService } from '@pars/db-adapters';
 import { Roles, RolesGuard } from '../auth/guards/roles.guard';
 import { SessionAuthGuard } from '../auth/guards/session.guard';
-// biome-ignore lint/style/useImportType: NestJS ValidationPipe needs the real class at runtime to validate/transform @Body()
-import { CreateTopicDto, PatchTopicDto } from './topic.dto';
-// biome-ignore lint/style/useImportType: NestJS DI token — runtime usage via emitDecoratorMetadata
-import { TopicService } from './topic.service';
 
 @ApiTags('topics')
 @Controller('topics')

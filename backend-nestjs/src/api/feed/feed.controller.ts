@@ -1,9 +1,9 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+// biome-ignore lint/style/useImportType: NestJS DI token — runtime usage via emitDecoratorMetadata
+import { FeedService } from '@pars/db-adapters';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { SessionAuthGuard } from '../auth/guards/session.guard';
-// biome-ignore lint/style/useImportType: NestJS DI token — runtime usage via emitDecoratorMetadata
-import { FeedService } from './feed.service';
 
 interface AuthUser {
 	id: string;

@@ -6,6 +6,7 @@ on:
     paths:
       - "backend-nestjs/Dockerfile"
       - "backend-nestjs/src/**"
+      - "packages/db-adapters/**"
       - "frontend/src/**"
       - ".github/workflows/security.yml"
   pull_request:
@@ -100,8 +101,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build Docker image
-        run: docker build -t pars-backend:${{ github.sha }} .
-        working-directory: backend-nestjs
+        # Build context must be the repo root — the Dockerfile also COPYs
+        # packages/db-adapters, which backend-nestjs depends on.
+        run: docker build -f backend-nestjs/Dockerfile -t pars-backend:${{ github.sha }} .
       - name: Trivy filesystem scan
         uses: aquasecurity/trivy-action@master
         with:

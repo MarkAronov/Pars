@@ -1,4 +1,3 @@
-import { PartialType } from '@nestjs/mapped-types';
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateThreadDto {
@@ -11,4 +10,12 @@ export class CreateThreadDto {
 	topicId!: string;
 }
 
-export class PatchThreadDto extends PartialType(CreateThreadDto) {}
+export class PatchThreadDto {
+	@IsOptional()
+	@IsString()
+	title?: string;
+
+	@IsOptional()
+	@IsString()
+	topicId?: string;
+}

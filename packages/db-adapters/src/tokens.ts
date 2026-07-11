@@ -1,0 +1,9 @@
+export const USER_REPOSITORY = Symbol('USER_REPOSITORY');
+export const FOLLOW_REPOSITORY = Symbol('FOLLOW_REPOSITORY');
+export const POST_REPOSITORY = Symbol('POST_REPOSITORY');
+export const THREAD_REPOSITORY = Symbol('THREAD_REPOSITORY');
+export const TOPIC_REPOSITORY = Symbol('TOPIC_REPOSITORY');
+export const MEDIA_REPOSITORY = Symbol('MEDIA_REPOSITORY');
+export const SEARCH_REPOSITORY = Symbol('SEARCH_REPOSITORY');
+export const FEED_REPOSITORY = Symbol('FEED_REPOSITORY');
+export const MEDIA_STORAGE = Symbol('MEDIA_STORAGE');

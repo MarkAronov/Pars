@@ -1,4 +1,5 @@
 {
   "backend-nestjs/src/**/*.{ts,tsx}": ["biome check --write"],
+  "packages/db-adapters/src/**/*.{ts,tsx}": ["biome check --write"],
   "frontend/src/**/*.{ts,tsx}": ["biome check --write"]
 }

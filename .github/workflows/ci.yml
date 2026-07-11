@@ -43,6 +43,7 @@ jobs:
           filters: |
             backend:
               - 'backend-nestjs/**'
+              - 'packages/db-adapters/**'
               - '.github/workflows/**'
             frontend:
               - 'frontend/**'

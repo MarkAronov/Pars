@@ -1,4 +1,6 @@
-# Run `fly launch` inside backend-nestjs/ to create the app, then `fly deploy`
+# Deploy from the REPO ROOT, not this directory — the Docker build context must
+# include packages/db-adapters, which backend-nestjs now depends on:
+#   fly deploy --config backend-nestjs/fly.toml --dockerfile backend-nestjs/Dockerfile .
 # Tigris storage: run `fly storage create` after launch to provision + auto-set S3 secrets
 app = "pars-backend-nestjs"
 primary_region = "ams"

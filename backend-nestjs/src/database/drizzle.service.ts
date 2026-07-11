@@ -3,10 +3,10 @@ import {
 	type OnModuleDestroy,
 	type OnModuleInit,
 } from '@nestjs/common';
+import * as schema from '@pars/db-adapters/schema';
 import { sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import * as schema from './schema';
 
 @Injectable()
 export class DrizzleService implements OnModuleInit, OnModuleDestroy {

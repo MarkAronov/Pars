@@ -10,12 +10,14 @@ import {
 	UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+// biome-ignore lint/style/useImportType: NestJS ValidationPipe needs the real class at runtime to validate/transform @Body()
+import {
+	CreateThreadDto,
+	PatchThreadDto,
+	ThreadService,
+} from '@pars/db-adapters';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { SessionAuthGuard } from '../auth/guards/session.guard';
-// biome-ignore lint/style/useImportType: NestJS ValidationPipe needs the real class at runtime to validate/transform @Body()
-import { CreateThreadDto, PatchThreadDto } from './thread.dto';
-// biome-ignore lint/style/useImportType: NestJS DI token — runtime usage via emitDecoratorMetadata
-import { ThreadService } from './thread.service';
 
 interface AuthUser {
 	id: string;

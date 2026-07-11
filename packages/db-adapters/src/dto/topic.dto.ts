@@ -1,4 +1,3 @@
-import { PartialType } from '@nestjs/mapped-types';
 import { IsNotEmpty, IsOptional, IsString, Length } from 'class-validator';
 
 export class CreateTopicDto {
@@ -13,4 +12,14 @@ export class CreateTopicDto {
 	description?: string;
 }
 
-export class PatchTopicDto extends PartialType(CreateTopicDto) {}
+export class PatchTopicDto {
+	@IsOptional()
+	@IsString()
+	@Length(1, 60)
+	name?: string;
+
+	@IsOptional()
+	@IsString()
+	@Length(0, 500)
+	description?: string;
+}

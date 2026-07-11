@@ -2,13 +2,6 @@
  * Per-test-file setup — bootstraps the NestJS app once per file,
  * clears DB rows between tests, and shuts the app down after all tests.
  */
-import { type INestApplication, ValidationPipe } from '@nestjs/common';
-import { Test, type TestingModule } from '@nestjs/testing';
-import cookieParser from 'cookie-parser';
-import helmet from 'helmet';
-import { afterAll, afterEach, beforeAll } from 'vitest';
-import { AppModule } from '../src/app.module';
-import { DrizzleService } from '../src/database/drizzle.service';
 import {
     accounts,
     follows,
@@ -22,7 +15,14 @@ import {
     twoFactors,
     users,
     verifications,
-} from '../src/database/schema';
+} from '@pars/db-adapters/schema';
+import { type INestApplication, ValidationPipe } from '@nestjs/common';
+import { Test, type TestingModule } from '@nestjs/testing';
+import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
+import { afterAll, afterEach, beforeAll } from 'vitest';
+import { AppModule } from '../src/app.module';
+import { DrizzleService } from '../src/database/drizzle.service';
 
 let app: INestApplication;
 let drizzle: DrizzleService;

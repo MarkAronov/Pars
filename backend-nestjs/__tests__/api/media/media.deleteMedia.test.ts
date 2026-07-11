@@ -1,7 +1,7 @@
+import { media } from '@pars/db-adapters/schema';
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import { getApp, getDrizzle } from '../../database';
-import { media } from '../../../src/database/schema';
 import { TINY_PNG, signUpAndLogin } from '../../helpers';
 
 describe('DELETE /api/media/:id — delete a media record and its file', () => {

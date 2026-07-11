@@ -1,4 +1,3 @@
-import { PartialType } from '@nestjs/mapped-types';
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreatePostDto {
@@ -15,4 +14,16 @@ export class CreatePostDto {
 	threadId?: string;
 }
 
-export class PatchPostDto extends PartialType(CreatePostDto) {}
+export class PatchPostDto {
+	@IsOptional()
+	@IsString()
+	title?: string;
+
+	@IsOptional()
+	@IsString()
+	content?: string;
+
+	@IsOptional()
+	@IsString()
+	threadId?: string;
+}

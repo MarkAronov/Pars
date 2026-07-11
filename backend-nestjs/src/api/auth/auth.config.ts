@@ -1,15 +1,15 @@
-import * as argon2 from 'argon2';
-import { betterAuth } from 'better-auth';
-import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import { twoFactor } from 'better-auth/plugins';
-import type { DrizzleService } from '../../database/drizzle.service';
 import {
 	accounts,
 	sessions,
 	twoFactors,
 	users,
 	verifications,
-} from '../../database/schema';
+} from '@pars/db-adapters/schema';
+import * as argon2 from 'argon2';
+import { betterAuth } from 'better-auth';
+import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { twoFactor } from 'better-auth/plugins';
+import type { DrizzleService } from '../../database/drizzle.service';
 
 type AuthInstance = ReturnType<typeof betterAuth>;
 let _auth: AuthInstance | null = null;
@@ -45,7 +45,8 @@ export function initAuth(drizzle: DrizzleService): AuthInstance {
 			// Must nest here, not top-level `password` — better-auth reads the
 			// custom hasher from emailAndPassword.password, and silently falls
 			// back to its own default hasher otherwise, which then mismatches
-			// user.service.ts's direct argon2.verify() calls on the stored hash.
+			// UserService's direct argon2.verify() calls on the stored hash
+			// (packages/db-adapters/src/services/user.service.ts).
 			password: {
 				hash: (password: string) => argon2.hash(password),
 				verify: ({ hash, password }: { hash: string; password: string }) =>

@@ -11,16 +11,16 @@ import {
 	UseGuards,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { Roles, RolesGuard } from '../auth/guards/roles.guard';
-import { SessionAuthGuard } from '../auth/guards/session.guard';
 import type {
 	PatchUserImportantDto,
 	PatchUserPasswordDto,
 	PatchUserRegularDto,
-} from './user.dto';
+} from '@pars/db-adapters';
 // biome-ignore lint/style/useImportType: NestJS DI token — runtime usage via emitDecoratorMetadata
-import { UserService } from './user.service';
+import { UserService } from '@pars/db-adapters';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { Roles, RolesGuard } from '../auth/guards/roles.guard';
+import { SessionAuthGuard } from '../auth/guards/session.guard';
 
 interface AuthUser {
 	id: string;

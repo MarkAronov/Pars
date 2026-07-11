@@ -1,24 +1,33 @@
-import { Injectable } from '@nestjs/common';
 import { desc, eq, inArray, sql } from 'drizzle-orm';
-// biome-ignore lint/style/useImportType: NestJS DI token — runtime usage via emitDecoratorMetadata
-import { DrizzleService } from '../../database/drizzle.service';
-import { follows, postLikes, posts, users } from '../../database/schema';
+import type { FeedRepository } from '../repositories/feed.repository.interface';
+import { follows, postLikes, posts, users } from '../schema';
+import type { FeedPost } from '../types';
+import type { DrizzleDB } from './db';
 
-@Injectable()
-export class FeedService {
-	constructor(private readonly drizzle: DrizzleService) {}
+export class PostgresFeedRepository implements FeedRepository {
+	constructor(private readonly drizzle: { db: DrizzleDB }) {}
 
-	async getForUser(userId: string, page: number, limit: number) {
-		const skip = (page - 1) * limit;
+	private get db() {
+		return this.drizzle.db;
+	}
 
-		const followingRows = await this.drizzle.db
+	async getFollowingIds(userId: string): Promise<string[]> {
+		const rows = await this.db
 			.select({ followeeId: follows.followeeId })
 			.from(follows)
 			.where(eq(follows.followerId, userId));
-		const authorIds = [userId, ...followingRows.map((f) => f.followeeId)];
+		return rows.map((f) => f.followeeId);
+	}
+
+	async getFeedPosts(
+		authorIds: string[],
+		page: number,
+		limit: number,
+	): Promise<{ items: FeedPost[]; total: number }> {
+		const skip = (page - 1) * limit;
 
 		const [feedPosts, totalRows] = await Promise.all([
-			this.drizzle.db
+			this.db
 				.select({
 					id: posts.id,
 					title: posts.title,
@@ -37,14 +46,14 @@ export class FeedService {
 				.orderBy(desc(posts.createdAt))
 				.limit(limit)
 				.offset(skip),
-			this.drizzle.db
+			this.db
 				.select({ count: sql<number>`count(*)::int` })
 				.from(posts)
 				.where(inArray(posts.authorId, authorIds)),
 		]);
 
 		return {
-			posts: feedPosts.map((r) => ({
+			items: feedPosts.map((r) => ({
 				id: r.id,
 				title: r.title,
 				content: r.content,
@@ -59,8 +68,6 @@ export class FeedService {
 				_count: { likes: r.likeCount },
 			})),
 			total: totalRows[0]?.count ?? 0,
-			page,
-			limit,
 		};
 	}
 }

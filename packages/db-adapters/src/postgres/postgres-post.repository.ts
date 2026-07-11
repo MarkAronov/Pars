@@ -1,13 +1,9 @@
-import {
-	ForbiddenException,
-	Injectable,
-	NotFoundException,
-} from '@nestjs/common';
 import { and, desc, eq, sql } from 'drizzle-orm';
-// biome-ignore lint/style/useImportType: NestJS DI token — runtime usage via emitDecoratorMetadata
-import { DrizzleService } from '../../database/drizzle.service';
-import { postLikes, postMentions, posts, users } from '../../database/schema';
-import type { CreatePostDto, PatchPostDto } from './post.dto';
+import type { CreatePostDto, PatchPostDto } from '../dto/post.dto';
+import type { PostRepository } from '../repositories/post.repository.interface';
+import { postLikes, postMentions, posts, users } from '../schema';
+import type { PublicPost } from '../types';
+import type { DrizzleDB } from './db';
 
 const postSelect = {
 	id: posts.id,
@@ -43,7 +39,7 @@ type PostRow = {
 	mentionedByCount: number;
 };
 
-function toPost(r: PostRow) {
+function toPost(r: PostRow): PublicPost {
 	return {
 		id: r.id,
 		title: r.title,
@@ -63,12 +59,19 @@ function toPost(r: PostRow) {
 	};
 }
 
-@Injectable()
-export class PostService {
-	constructor(private readonly drizzle: DrizzleService) {}
+export class PostgresPostRepository implements PostRepository {
+	constructor(private readonly drizzle: { db: DrizzleDB }) {}
 
-	async findAll(page: number, limit: number, authorId?: string) {
-		const rows = await this.drizzle.db
+	private get db() {
+		return this.drizzle.db;
+	}
+
+	async findAll(
+		page: number,
+		limit: number,
+		authorId?: string,
+	): Promise<PublicPost[]> {
+		const rows = await this.db
 			.select(postSelect)
 			.from(posts)
 			.innerJoin(users, eq(posts.authorId, users.id))
@@ -79,68 +82,57 @@ export class PostService {
 		return rows.map(toPost);
 	}
 
-	async findById(id: string) {
-		const [row] = await this.drizzle.db
+	async findById(id: string): Promise<PublicPost | null> {
+		const [row] = await this.db
 			.select(postSelect)
 			.from(posts)
 			.innerJoin(users, eq(posts.authorId, users.id))
 			.where(eq(posts.id, id));
-		if (!row) throw new NotFoundException('Post not found');
-		return toPost(row);
+		return row ? toPost(row) : null;
 	}
 
-	async create(authorId: string, dto: CreatePostDto) {
-		const [inserted] = await this.drizzle.db
+	async create(authorId: string, dto: CreatePostDto): Promise<string> {
+		const [inserted] = await this.db
 			.insert(posts)
 			.values({ ...dto, authorId })
 			.returning({ id: posts.id });
-		return this.findById(inserted.id);
+		return inserted.id;
 	}
 
-	async patch(
-		postId: string,
-		userId: string,
-		userRole: string,
-		dto: PatchPostDto,
-	) {
-		const [existing] = await this.drizzle.db
+	async getAuthorId(postId: string): Promise<string | null> {
+		const [row] = await this.db
 			.select({ authorId: posts.authorId })
 			.from(posts)
 			.where(eq(posts.id, postId));
-		if (!existing) throw new NotFoundException('Post not found');
-		if (existing.authorId !== userId && userRole !== 'admin')
-			throw new ForbiddenException();
-		await this.drizzle.db
+		return row?.authorId ?? null;
+	}
+
+	async update(postId: string, patch: PatchPostDto): Promise<void> {
+		await this.db
 			.update(posts)
-			.set({ ...dto, edited: true })
+			.set({ ...patch, edited: true })
 			.where(eq(posts.id, postId));
-		return this.findById(postId);
 	}
 
-	async delete(postId: string, userId: string, userRole: string) {
-		const [existing] = await this.drizzle.db
-			.select({ authorId: posts.authorId })
-			.from(posts)
-			.where(eq(posts.id, postId));
-		if (!existing) throw new NotFoundException('Post not found');
-		if (existing.authorId !== userId && userRole !== 'admin')
-			throw new ForbiddenException();
-		await this.drizzle.db.delete(posts).where(eq(posts.id, postId));
-		return { message: 'Post deleted' };
+	async delete(postId: string): Promise<void> {
+		await this.db.delete(posts).where(eq(posts.id, postId));
 	}
 
-	async toggleLike(postId: string, userId: string) {
-		const [existing] = await this.drizzle.db
+	async isLiked(postId: string, userId: string): Promise<boolean> {
+		const [existing] = await this.db
 			.select({ postId: postLikes.postId })
 			.from(postLikes)
 			.where(and(eq(postLikes.postId, postId), eq(postLikes.userId, userId)));
-		if (existing) {
-			await this.drizzle.db
-				.delete(postLikes)
-				.where(and(eq(postLikes.postId, postId), eq(postLikes.userId, userId)));
-			return { liked: false };
-		}
-		await this.drizzle.db.insert(postLikes).values({ postId, userId });
-		return { liked: true };
+		return !!existing;
+	}
+
+	async like(postId: string, userId: string): Promise<void> {
+		await this.db.insert(postLikes).values({ postId, userId });
+	}
+
+	async unlike(postId: string, userId: string): Promise<void> {
+		await this.db
+			.delete(postLikes)
+			.where(and(eq(postLikes.postId, postId), eq(postLikes.userId, userId)));
 	}
 }

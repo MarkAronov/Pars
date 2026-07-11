@@ -48,8 +48,10 @@ jobs:
         with:
       - uses: superfly/flyctl-actions/setup-flyctl@master
       - name: Deploy to Fly.io
-        run: flyctl deploy --remote-only
-        working-directory: backend-nestjs
+        # Build context must be the repo root (not backend-nestjs/) — the
+        # Dockerfile now also COPYs packages/db-adapters, which backend-nestjs
+        # depends on and which Docker can't reach from a narrower context.
+        run: flyctl deploy --remote-only --config backend-nestjs/fly.toml --dockerfile backend-nestjs/Dockerfile .
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 

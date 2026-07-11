@@ -1,6 +1,7 @@
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import { RedisContainer, type StartedRedisContainer } from '@testcontainers/redis';
 import { execSync } from 'node:child_process';
+import path from 'node:path';
 import postgres from 'postgres';
 
 let pgContainer: StartedPostgreSqlContainer;
@@ -29,8 +30,10 @@ export async function setup() {
 	await sql`CREATE EXTENSION IF NOT EXISTS vector`;
 	await sql.end();
 
-	// Push schema to the test database (no migration history required)
-	execSync('bun run db:push --force', {
+	// Push schema to the test database (no migration history required).
+	// drizzle.config.ts lives in packages/db-adapters, which owns the schema.
+	execSync('bunx drizzle-kit push --force', {
+		cwd: path.resolve(process.cwd(), '../packages/db-adapters'),
 		env: { ...process.env, DATABASE_URL: databaseUrl },
 		stdio: 'pipe',
 	});

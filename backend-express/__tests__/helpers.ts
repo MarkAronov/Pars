@@ -48,3 +48,34 @@ export const signUpAndLogin = async (
 	const cookie = (loginRes.headers['set-cookie'] as unknown as string[])[0];
 	return { userId, email, cookie };
 };
+
+// Smallest possible valid PNG (1x1 transparent pixel) — passes file-type's magic-byte sniffing.
+export const TINY_PNG = Buffer.from(
+	'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+	'base64',
+);
+
+export const createTopic = async (namePrefix: string): Promise<string> => {
+	const app = await getApp();
+	const admin = await signUpAndLogin(`${namePrefix}-admin`, 'admin');
+	const res = await request(app)
+		.post('/api/topics')
+		.set('Cookie', admin.cookie)
+		.send({ name: `${namePrefix}-${Date.now()}`.slice(0, 60) })
+		.expect(201);
+	return res.body.id as string;
+};
+
+export const createThread = async (
+	userCookie: string,
+	topicId: string,
+	title = 'Test thread',
+): Promise<string> => {
+	const app = await getApp();
+	const res = await request(app)
+		.post('/api/threads')
+		.set('Cookie', userCookie)
+		.send({ title, topicId })
+		.expect(201);
+	return res.body.id as string;
+};

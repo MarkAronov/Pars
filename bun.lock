@@ -14,8 +14,10 @@
       "name": "pars-backend-express",
       "version": "1.0.0",
       "dependencies": {
+        "@aws-sdk/client-s3": "^3.1076.0",
         "@nestjs/common": "^11.0.0",
         "@pars/db-adapters": "workspace:*",
+        "@socket.io/redis-adapter": "^8.0.0",
         "argon2": "^0.43.0",
         "better-auth": "^1.0.0",
         "class-transformer": "^0.5.1",
@@ -27,9 +29,11 @@
         "express": "^5.2.1",
         "file-type": "^22.0.1",
         "helmet": "^8.0.0",
+        "ioredis": "^5.0.0",
         "mongodb": "^7.5.0",
         "multer": "^1.4.5-lts.1",
         "postgres": "^3.4.5",
+        "socket.io": "^4.0.0",
       },
       "devDependencies": {
         "@biomejs/biome": "^1.9.4",

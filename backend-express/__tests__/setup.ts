@@ -6,8 +6,13 @@ import { COLLECTIONS } from '@pars/db-adapters';
 import {
 	accounts,
 	follows,
+	media,
+	postLikes,
+	postMentions,
 	posts,
 	sessions,
+	threads,
+	topics,
 	twoFactors,
 	users,
 	verifications,
@@ -23,6 +28,7 @@ import {
 	disconnectDrizzle,
 } from '../src/database/drizzle';
 import { connectMongo, disconnectMongo } from '../src/database/mongo';
+import { createStorageProvider } from '../src/storage/storage.service';
 
 let app: ReturnType<typeof createApp>;
 let drizzleDb: DrizzleDb | null = null;
@@ -34,7 +40,8 @@ beforeAll(async () => {
 	mongoDb = isMongo ? await connectMongo() : null;
 
 	initAuth(drizzleDb, mongoDb);
-	const repos = buildContainer(drizzleDb, mongoDb);
+	const storage = createStorageProvider();
+	const repos = buildContainer(drizzleDb, mongoDb, storage);
 	app = createApp(repos);
 });
 
@@ -49,7 +56,12 @@ afterEach(async () => {
 		return;
 	}
 	const db = drizzleDb as DrizzleDb;
+	await db.delete(postMentions);
+	await db.delete(postLikes);
+	await db.delete(media);
 	await db.delete(posts);
+	await db.delete(threads);
+	await db.delete(topics);
 	await db.delete(follows);
 	await db.delete(twoFactors);
 	await db.delete(verifications);

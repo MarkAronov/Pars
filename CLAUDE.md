@@ -2,20 +2,36 @@
 
 ## Project overview
 
-Pars is a social platform (posts, follows, threads, topics) built as a monorepo:
+Pars is a social platform (posts, follows, threads, topics) built as a monorepo. It also doubles
+as a side-by-side comparison project: `backend-nestjs` and `backend-express` are two different
+framework implementations of the *same* API, routing to the *same* shared business logic in
+`packages/db-adapters`, each swappable between Postgres and MongoDB via `DATABASE_DRIVER`.
 
 ```
 /
-├── backend-nestjs/          NestJS + Drizzle → PostgreSQL, better-auth sessions
+├── backend-nestjs/          NestJS + Drizzle → PostgreSQL/MongoDB, better-auth sessions
+├── backend-express/         Express — same shared services, thin Express-native routing layer
 ├── frontend/                React 19 + Vite + TanStack Router, Tailwind CSS, Biome
-└── packages/
-    ├── ui/                  @pars/ui — shared behavioral utilities (cn, hooks)
-    └── db-adapters/         @pars/db-adapters — shared Drizzle schema, repository
-                             interfaces/Postgres adapters, and framework-agnostic
-                             services used by backend-nestjs (and future backends)
+├── packages/
+│   ├── ui/                  @pars/ui — shared behavioral utilities (cn, hooks)
+│   └── db-adapters/         @pars/db-adapters — shared Drizzle schema, repository
+│                            interfaces/Postgres+Mongo adapters, and the framework-agnostic
+│                            services both backends route requests to
+├── database-postgres-pgvector/  Postgres+pgvector infra (docker-compose only)
+├── database-mongodb/            MongoDB infra (single-node replica set, for transactions)
+├── messaging-kafka/             Kafka (KRaft) + RabbitMQ + Redis/BullMQ — infra + demo scripts,
+│                                 not wired into either backend
+├── messaging-nats/              NATS + JetStream — infra + demo scripts, not wired into either backend
+└── search-typesense/             Typesense + LangChain semantic-search demo
 ```
 
 **Package manager:** Bun everywhere. Never use npm, yarn, or pnpm.
+
+**When adding or changing a feature that touches business logic** (validation, authorization, data
+access): make the change once in `packages/db-adapters/src/services|repositories`, not in either
+backend's routing layer. Both backends should only ever need routing-glue changes (new route +
+middleware wiring), never duplicated logic — that duplication is exactly what the shared package
+exists to prevent.
 
 ---
 
@@ -241,6 +257,8 @@ All routes are prefixed `/api/` via the global prefix set in `main.ts`.
 
 **Search** (`/api/search`)
 - `GET /?q=&type=posts|users|topics&page=&limit=` — full-text search across posts, users, or topics
+- `GET /?q=&type=semantic&limit=` — vector similarity search over posts via pgvector. Postgres only
+  (501 under `DATABASE_DRIVER=mongo`); requires `OPENAI_API_KEY` to be set (503 otherwise)
 
 **Media** (`/api/media`)
 - `POST /avatar` — upload avatar image (`multipart/form-data`, field name: `file`)
@@ -269,7 +287,7 @@ Run `generate` after any schema change in `packages/db-adapters/src/schema/`, th
 
 ## Environment variables
 
-### Backend (create `backend-nestjs/.env`)
+### Backend (copy `backend-nestjs/.env.example` → `backend-nestjs/.env`, same for `backend-express/`)
 ```
 DATABASE_DRIVER=postgres                # or 'mongo' — picks the repository implementation
 DATABASE_URL=postgresql://user:password@localhost:5432/pars   # required when DATABASE_DRIVER=postgres
@@ -277,12 +295,28 @@ MONGO_URL=mongodb://localhost:27017/pars_dev?replicaSet=rs0   # required when DA
 SESSION_SECRET=change-me-in-production-32-chars!!
 CORS_ORIGIN=http://localhost:5173
 REDIS_URL=redis://localhost:6379        # optional — defaults to localhost:6379
+STORAGE_DRIVER=local                    # or 's3' — see storage section below
+BUCKET_NAME= / AWS_ENDPOINT_URL_S3= / AWS_ACCESS_KEY_ID= / AWS_SECRET_ACCESS_KEY= / S3_PUBLIC_URL=
 OPENAI_API_KEY=                         # optional — enables real semantic search + post embeddings
 ```
 
-`DATABASE_DRIVER` defaults to Postgres when unset. The Mongo path needs `database-mongodb/`'s docker-compose running first (single-node replica set — required for the Mongo repositories' cascade-delete transactions).
+`DATABASE_DRIVER` defaults to Postgres when unset. The Mongo path needs `database-mongodb/`'s docker-compose running first (single-node replica set — required for the Mongo repositories' cascade-delete transactions), or a real Atlas cluster for a deployed instance (see the free-tier checklist below).
 
 `OPENAI_API_KEY` is optional and costs real money per call when set — leave it empty for local dev/tests. Without it, `embedText()` (`packages/db-adapters/src/search/embeddings.ts`) silently no-ops: posts are created normally, they just don't get an embedding, and `GET /api/search?type=semantic` returns 503. With it set, posts get a real `text-embedding-3-small` embedding on create/edit, and semantic search does a real pgvector cosine-similarity query against the existing `embedding vector(1536)` columns. Postgres only — self-hosted MongoDB has no native vector search, so `type=semantic` returns 501 under `DATABASE_DRIVER=mongo`.
+
+`S3_PUBLIC_URL` (and the other `AWS_*` vars) are generically named — despite the Tigris-flavored default fallback in `s3.storage.provider.ts`, they work with any S3-compatible provider (Cloudflare R2, Backblaze B2, Tigris, real AWS S3) by pointing `AWS_ENDPOINT_URL_S3` at that provider's endpoint.
+
+### Free-tier deployment checklist (nothing here can be created on your behalf)
+
+If deploying `backend-express` (or re-pointing `backend-nestjs`) somewhere that isn't local Docker,
+these need a human to sign up and paste the resulting values into `.env` locally or `fly secrets set`
+for a deployed instance — see each backend's `.env.example` for exactly which var each value goes in:
+
+1. **Postgres** — create a project at [neon.tech](https://neon.tech) (free tier, pgvector built in) → copy its connection string into `DATABASE_URL`.
+2. **MongoDB** (only if using the Mongo driver) — create a free M0 cluster at [MongoDB Atlas](https://www.mongodb.com/atlas) → copy its connection string into `MONGO_URL`.
+3. **Media storage** — create a bucket at [Cloudflare R2](https://developers.cloudflare.com/r2) (free tier, S3-compatible — `S3StorageProvider` needs no code changes) → set `BUCKET_NAME`, `AWS_ENDPOINT_URL_S3`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `S3_PUBLIC_URL`. Or just leave `STORAGE_DRIVER=local` if persistence across deploys doesn't matter yet.
+4. **`OPENAI_API_KEY`** (optional) — only if you want real semantic search rather than the no-op fallback.
+5. **The Fly.io apps themselves** — `backend-nestjs/fly.toml` and `backend-express/fly.toml` are ready, but no Fly app has been created yet for either. Run `fly launch --config backend-nestjs/fly.toml` / `--config backend-express/fly.toml` from the repo root when ready, then `fly secrets set` for each of the values above.
 
 ### Frontend (copy `frontend/env/.env.example` → `frontend/env/.env.development`)
 ```
@@ -305,10 +339,11 @@ the same seeded data — `bun run dev` (port 3000, backend-nestjs) vs `bun run d
 ## What's NOT done yet (known stubs)
 
 - **ForgotPasswordPage** — UI exists but `authClient.forgetPassword` is stubbed. Backend needs `sendResetPassword` configured in `auth.config.ts`.
-- **Search** — backend `/api/search` is fully implemented; frontend needs a search input + results view wired to it.
+- **Search** — backend `/api/search` (including `type=semantic`, Postgres-only) is fully implemented; frontend needs a search input + results view wired to it.
 - **SettingsPage** — real account settings form (PATCH /me endpoints exist).
-- **Notifications** — not implemented.
-- **WebSockets** — `VITE_SOCKET_URL` is configured but no socket server exists yet.
+- **Notifications** — the `/notifications` Socket.IO namespace exists on both backends (join/sendToUser), but no REST action triggers a notification yet, and the frontend doesn't listen for one.
+- **Real-time feed/presence on the frontend** — both backends run `/feed` and `/presence` Socket.IO namespaces (`VITE_SOCKET_URL` points at them), but the frontend doesn't consume them yet.
+- **backend-express Mongo semantic search** — same documented asymmetry as backend-nestjs: self-hosted MongoDB has no native vector search, so `type=semantic` returns 501 under `DATABASE_DRIVER=mongo` on either backend.
 
 ---
 
@@ -316,17 +351,24 @@ the same seeded data — `bun run dev` (port 3000, backend-nestjs) vs `bun run d
 
 ```bash
 # From repo root
-bun install                        # install all workspaces
+bun install                            # install all workspaces
 
-# Backend
-cd backend && bun run dev          # start NestJS dev server
-cd backend && bun run build        # production build
+# Backend — NestJS (:3000)
+bun run dev:backend-nestjs             # start dev server
+bun run build:backend-nestjs           # production build
+bun run test:backend-nestjs            # vitest (real testcontainers, no mocks)
+
+# Backend — Express (:3001), same API, same shared services
+bun run dev:backend-express
+bun run build:backend-express
+bun run test:backend-express
 
 # Frontend
-cd frontend && bun run dev         # Vite dev server
-cd frontend && bun run build       # production build (also runs tsc)
-cd frontend && bun run lint        # Biome lint
+bun run dev:frontend                   # Vite dev server, points at backend-nestjs
+bun run dev:frontend-express           # Vite dev server, points at backend-express
+cd frontend && bun run build           # production build (also runs tsc)
+cd frontend && bun run lint            # Biome lint
 
 # Shared package
-cd packages/ui && bun run build    # if needed
+cd packages/ui && bun run build        # if needed
 ```

@@ -6,6 +6,8 @@ on:
     paths:
       - "backend-nestjs/Dockerfile"
       - "backend-nestjs/src/**"
+      - "backend-express/Dockerfile"
+      - "backend-express/src/**"
       - "packages/db-adapters/**"
       - "frontend/src/**"
       - ".github/workflows/security.yml"
@@ -94,21 +96,25 @@ jobs:
   # DOCKER SECURITY SCAN — Trivy
   # ------------------------------------------------------------------
   docker-scan:
-    name: Docker Image Scan
+    name: Docker Image Scan (${{ matrix.pkg }})
     runs-on: ubuntu-latest
     needs: flags
     if: ${{ needs.flags.outputs.skip_docker_scan != 'true' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        pkg: [backend-nestjs, backend-express]
     steps:
       - uses: actions/checkout@v4
       - name: Build Docker image
         # Build context must be the repo root — the Dockerfile also COPYs
-        # packages/db-adapters, which backend-nestjs depends on.
-        run: docker build -f backend-nestjs/Dockerfile -t pars-backend:${{ github.sha }} .
+        # packages/db-adapters, which both backends depend on.
+        run: docker build -f ${{ matrix.pkg }}/Dockerfile -t pars-${{ matrix.pkg }}:${{ github.sha }} .
       - name: Trivy filesystem scan
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: "fs"
-          scan-ref: "."
+          scan-ref: "${{ matrix.pkg }}"
           format: "sarif"
           output: "trivy-fs-results.sarif"
           severity: "CRITICAL,HIGH,MEDIUM"
@@ -116,11 +122,11 @@ jobs:
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: "trivy-fs-results.sarif"
-          category: "trivy-filesystem"
+          category: "trivy-filesystem-${{ matrix.pkg }}"
       - name: Trivy image scan
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: "pars-backend:${{ github.sha }}"
+          image-ref: "pars-${{ matrix.pkg }}:${{ github.sha }}"
           format: "table"
           severity: "CRITICAL,HIGH"
           exit-code: "1"

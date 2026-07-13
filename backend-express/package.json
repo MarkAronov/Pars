@@ -23,7 +23,11 @@
 		"check": "biome check ./src",
 		"check:fix": "biome check ./src --fix",
 		"test": "vitest run",
-		"test:watch": "vitest --watch"
+		"test:watch": "vitest --watch",
+		"db:generate": "cd ../packages/db-adapters && bunx drizzle-kit generate",
+		"db:migrate": "cd ../packages/db-adapters && bunx drizzle-kit migrate",
+		"db:studio": "cd ../packages/db-adapters && bunx drizzle-kit studio",
+		"db:push": "cd ../packages/db-adapters && bunx drizzle-kit push"
 	},
 	"dependencies": {
 		"@aws-sdk/client-s3": "^3.1076.0",

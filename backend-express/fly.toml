@@ -1,0 +1,37 @@
+# Deploy from the REPO ROOT, not this directory — the Docker build context must
+# include packages/db-adapters, which backend-express now depends on:
+#   fly deploy --config backend-express/fly.toml --dockerfile backend-express/Dockerfile .
+# Tigris storage: run `fly storage create` after launch to provision + auto-set S3 secrets
+app = "pars-backend-express"
+primary_region = "ams"
+
+[build]
+
+[deploy]
+  # Runs migrations against the production DB before each new version goes
+  # live — the same idempotent shared migration command backend-nestjs's
+  # release_command runs, safe regardless of which backend's deploy
+  # triggers it first or if both do.
+  release_command = "bun run db:migrate"
+
+[env]
+  NODE_ENV = "production"
+  PORT = "3001"
+
+[http_service]
+  internal_port = 3001
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+  [http_service.concurrency]
+    type = "connections"
+    hard_limit = 100
+    soft_limit = 80
+
+[[vm]]
+  memory = "1gb"
+  cpu_kind = "shared"
+  cpus = 1

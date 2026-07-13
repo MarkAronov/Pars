@@ -12,6 +12,17 @@ if [ -d "backend-nestjs" ]; then
   (cd backend-nestjs && bun run build) || exit 1
 fi
 
+if [ -d "backend-express" ]; then
+  echo "→ backend-express: type check"
+  (cd backend-express && bunx tsc --noEmit) || exit 1
+
+  echo "→ backend-express: tests (skipped locally — requires Docker/Testcontainers, runs in CI)"
+  # (cd backend-express && bun test) || exit 1
+
+  echo "→ backend-express: build"
+  (cd backend-express && bun run build) || exit 1
+fi
+
 # Frontend checks
 if [ -d "frontend" ]; then
   echo "→ Frontend: type check"
@@ -25,6 +36,9 @@ fi
 if [ "$FULL_PRE_PUSH" = "1" ]; then
   echo "→ Security: bun audit (backend-nestjs)"
   (cd backend-nestjs && bun audit) || true
+
+  echo "→ Security: bun audit (backend-express)"
+  (cd backend-express && bun audit) || true
 
   echo "→ Security: bun audit (frontend)"
   (cd frontend && bun audit) || true

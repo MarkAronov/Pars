@@ -43,6 +43,7 @@ jobs:
           filters: |
             backend:
               - 'backend-nestjs/**'
+              - 'backend-express/**'
               - 'packages/db-adapters/**'
               - '.github/workflows/**'
             frontend:
@@ -80,11 +81,15 @@ jobs:
   backend-ci:
     needs: [changes, flags]
     if: ${{ needs.changes.outputs.backend == 'true' && needs.flags.outputs.skip_backend != 'true' }}
-    name: Backend CI
+    name: Backend CI (${{ matrix.pkg }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        pkg: [backend-nestjs, backend-express]
     defaults:
       run:
-        working-directory: backend-nestjs
+        working-directory: ${{ matrix.pkg }}
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2

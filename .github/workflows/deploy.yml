@@ -36,22 +36,35 @@ jobs:
             return { skip_deploy: has('[skip-deploy]', 'skip-deploy') ? 'true' : 'false' }
 
   # ------------------------------------------------------------------
-  # BACKEND DEPLOY — Fly.io
+  # BACKEND DEPLOY — Fly.io (two separate apps, each its own scale/rollback)
   # ------------------------------------------------------------------
-  deploy-backend:
+  deploy-backend-nestjs:
     needs: flags
     if: ${{ needs.flags.outputs.skip_deploy != 'true' }}
-    name: Deploy Backend to Fly.io
+    name: Deploy backend-nestjs to Fly.io
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
       - uses: superfly/flyctl-actions/setup-flyctl@master
       - name: Deploy to Fly.io
         # Build context must be the repo root (not backend-nestjs/) — the
         # Dockerfile now also COPYs packages/db-adapters, which backend-nestjs
         # depends on and which Docker can't reach from a narrower context.
         run: flyctl deploy --remote-only --config backend-nestjs/fly.toml --dockerfile backend-nestjs/Dockerfile .
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+  deploy-backend-express:
+    needs: flags
+    if: ${{ needs.flags.outputs.skip_deploy != 'true' }}
+    name: Deploy backend-express to Fly.io
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - name: Deploy to Fly.io
+        # Same repo-root build context requirement as backend-nestjs — see above.
+        run: flyctl deploy --remote-only --config backend-express/fly.toml --dockerfile backend-express/Dockerfile .
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 

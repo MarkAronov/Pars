@@ -1,4 +1,4 @@
-import { eq, ilike, or } from 'drizzle-orm';
+import { eq, ilike, isNotNull, or, sql } from 'drizzle-orm';
 import type { SearchRepository } from '../repositories/search.repository.interface';
 import { posts, topics, users } from '../schema';
 import type { PublicTopic, SearchPostResult, SearchUserResult } from '../types';
@@ -66,6 +66,50 @@ export class PostgresSearchRepository implements SearchRepository {
 			.where(or(ilike(posts.title, `%${q}%`), ilike(posts.content, `%${q}%`)))
 			.limit(limit)
 			.offset((page - 1) * limit);
+
+		return rows.map((r) => ({
+			id: r.id,
+			title: r.title,
+			content: r.content,
+			createdAt: r.createdAt,
+			author: {
+				id: r.authorId,
+				username: r.authorUsername,
+				displayName: r.authorDisplayName,
+				avatarUrl: r.authorAvatarUrl,
+			},
+		}));
+	}
+
+	async searchPostsSemantic(
+		queryEmbedding: number[],
+		limit: number,
+	): Promise<SearchPostResult[]> {
+		// Direct pgvector cosine-distance query (`<=>`) against the existing
+		// embedding column, rather than routing through LangChain's
+		// PGVectorStore — that class expects to own/create its own table
+		// schema (id/content/metadata/embedding), which doesn't map cleanly
+		// onto post's much richer existing schema without real shimming.
+		// @langchain/openai still does the actual embedding generation (see
+		// embeddings.ts); this is the same `<=>` operator PGVectorStore uses
+		// internally, just against the table this app already owns.
+		const vectorLiteral = `[${queryEmbedding.join(',')}]`;
+		const rows = await this.db
+			.select({
+				id: posts.id,
+				title: posts.title,
+				content: posts.content,
+				createdAt: posts.createdAt,
+				authorId: users.id,
+				authorUsername: users.username,
+				authorDisplayName: users.displayName,
+				authorAvatarUrl: users.avatarUrl,
+			})
+			.from(posts)
+			.innerJoin(users, eq(posts.authorId, users.id))
+			.where(isNotNull(posts.embedding))
+			.orderBy(sql`${posts.embedding} <=> ${vectorLiteral}::vector`)
+			.limit(limit);
 
 		return rows.map((r) => ({
 			id: r.id,

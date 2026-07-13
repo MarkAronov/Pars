@@ -15,4 +15,7 @@ export interface PostRepository {
 	isLiked(postId: string, userId: string): Promise<boolean>;
 	like(postId: string, userId: string): Promise<void>;
 	unlike(postId: string, userId: string): Promise<void>;
+	// Postgres-only in practice — see MongoPostRepository's implementation for
+	// why (self-hosted MongoDB has no vector search, so it's a documented no-op).
+	setEmbedding(postId: string, embedding: number[]): Promise<void>;
 }

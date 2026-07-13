@@ -187,4 +187,9 @@ export class MongoPostRepository implements PostRepository {
 			.collection<PostLikeDoc>(COLLECTIONS.postLike)
 			.deleteOne({ postId, userId });
 	}
+
+	// Documented no-op: self-hosted MongoDB has no native vector search (see
+	// the plan's Mongo/semantic-search asymmetry note), so nothing ever reads
+	// this back — storing it anyway would just be dead weight.
+	async setEmbedding(_postId: string, _embedding: number[]): Promise<void> {}
 }

@@ -135,4 +135,8 @@ export class PostgresPostRepository implements PostRepository {
 			.delete(postLikes)
 			.where(and(eq(postLikes.postId, postId), eq(postLikes.userId, userId)));
 	}
+
+	async setEmbedding(postId: string, embedding: number[]): Promise<void> {
+		await this.db.update(posts).set({ embedding }).where(eq(posts.id, postId));
+	}
 }

@@ -1,6 +1,7 @@
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import type { CreatePostDto, PatchPostDto } from '../dto/post.dto';
 import type { PostRepository } from '../repositories/post.repository.interface';
+import { embedText } from '../search/embeddings';
 
 export class PostService {
 	constructor(private readonly posts: PostRepository) {}
@@ -17,6 +18,7 @@ export class PostService {
 
 	async create(authorId: string, dto: CreatePostDto) {
 		const id = await this.posts.create(authorId, dto);
+		await this.generateEmbedding(id, dto.content);
 		return this.findById(id);
 	}
 
@@ -32,7 +34,21 @@ export class PostService {
 			throw new ForbiddenException();
 		}
 		await this.posts.update(postId, dto);
+		if (dto.content) await this.generateEmbedding(postId, dto.content);
 		return this.findById(postId);
+	}
+
+	// A no-op when OPENAI_API_KEY isn't configured (embedText returns null) —
+	// see embeddings.ts. Never fails post creation/editing: embedding
+	// generation is a secondary enhancement for semantic search, not core
+	// functionality, so a transient API error here shouldn't 500 the request.
+	private async generateEmbedding(postId: string, content: string) {
+		try {
+			const embedding = await embedText(content);
+			if (embedding) await this.posts.setEmbedding(postId, embedding);
+		} catch (err) {
+			console.error('Failed to generate post embedding', err);
+		}
 	}
 
 	async delete(postId: string, userId: string, userRole: string) {

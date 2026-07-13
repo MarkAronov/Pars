@@ -277,9 +277,12 @@ MONGO_URL=mongodb://localhost:27017/pars_dev?replicaSet=rs0   # required when DA
 SESSION_SECRET=change-me-in-production-32-chars!!
 CORS_ORIGIN=http://localhost:5173
 REDIS_URL=redis://localhost:6379        # optional — defaults to localhost:6379
+OPENAI_API_KEY=                         # optional — enables real semantic search + post embeddings
 ```
 
 `DATABASE_DRIVER` defaults to Postgres when unset. The Mongo path needs `database-mongodb/`'s docker-compose running first (single-node replica set — required for the Mongo repositories' cascade-delete transactions).
+
+`OPENAI_API_KEY` is optional and costs real money per call when set — leave it empty for local dev/tests. Without it, `embedText()` (`packages/db-adapters/src/search/embeddings.ts`) silently no-ops: posts are created normally, they just don't get an embedding, and `GET /api/search?type=semantic` returns 503. With it set, posts get a real `text-embedding-3-small` embedding on create/edit, and semantic search does a real pgvector cosine-similarity query against the existing `embedding vector(1536)` columns. Postgres only — self-hosted MongoDB has no native vector search, so `type=semantic` returns 501 under `DATABASE_DRIVER=mongo`.
 
 ### Frontend (copy `frontend/env/.env.example` → `frontend/env/.env.development`)
 ```

@@ -1,3 +1,4 @@
+import { NotImplementedException } from '@nestjs/common';
 import type { Db } from 'mongodb';
 import type { SearchRepository } from '../repositories/search.repository.interface';
 import type { PublicTopic, SearchPostResult, SearchUserResult } from '../types';
@@ -104,5 +105,16 @@ export class MongoSearchRepository implements SearchRepository {
 				avatarUrl: d.author.avatarUrl,
 			},
 		}));
+	}
+
+	// Self-hosted MongoDB has no native vector search — LangChain's Mongo
+	// vector store requires Atlas specifically. Documented, accepted
+	// asymmetry (see search-typesense/README.md and the restructure plan),
+	// not an oversight — surfaced as a clear error rather than silently
+	// returning empty results.
+	async searchPostsSemantic(): Promise<SearchPostResult[]> {
+		throw new NotImplementedException(
+			'Semantic search is not supported on the Mongo driver — self-hosted MongoDB has no native vector search',
+		);
 	}
 }

@@ -291,6 +291,15 @@ VITE_SOCKET_URL=http://localhost:3000
 VITE_GLITCHTIP_DSN=                    # leave empty in development
 ```
 
+### Frontend, pointed at backend-express instead
+
+`frontend/env/.env.development.express` is checked in (nothing secret in it — just `localhost:3001`)
+and used by `bun run dev:express-backend` (`vite --mode development.express`). Vite's `envDir: './env'`
+config picks it up automatically; no changes needed to `api.ts` or `auth.ts`, since both already read
+`VITE_API_BASE_URL` at module load. Run the two dev servers side by side to compare backends against
+the same seeded data — `bun run dev` (port 3000, backend-nestjs) vs `bun run dev:express-backend`
+(port 3001, backend-express).
+
 ---
 
 ## What's NOT done yet (known stubs)

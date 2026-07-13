@@ -17,6 +17,7 @@
         "dev:backend-nestjs": "cd backend-nestjs && bun run dev",
         "dev:backend-express": "cd backend-express && bun run dev",
         "dev:frontend": "cd frontend && bun run dev",
+        "dev:frontend-express": "cd frontend && bun run dev:express-backend",
         "test:backend-nestjs": "cd backend-nestjs && bun test",
         "test:backend-express": "cd backend-express && bun test",
         "test:frontend": "cd frontend && bun test",

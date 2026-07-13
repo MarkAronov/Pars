@@ -1,7 +1,7 @@
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import { getApp } from '../../database';
-import { TINY_PNG, signUpAndLogin } from '../../helpers';
+import { signUpAndLogin, TINY_PNG } from '../../helpers';
 
 describe('POST /api/media/background — upload profile background image', () => {
 	it('uploads a valid image and updates the user backgroundUrl', async () => {

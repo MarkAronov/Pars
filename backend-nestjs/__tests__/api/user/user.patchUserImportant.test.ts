@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeAll } from 'vitest';
-import { getApp } from '../../database';
 import request from 'supertest';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { getApp } from '../../database';
 
 describe('PATCH /api/users/me/important', () => {
 	let app: Awaited<ReturnType<typeof getApp>>;
@@ -22,7 +22,10 @@ describe('PATCH /api/users/me/important', () => {
 		const res = await request(app.getHttpServer())
 			.patch('/api/users/me/important')
 			.set('Cookie', cookie)
-			.send({ username: `newuser${Date.now()}`, currentPassword: 'P@ssw0rd123!' })
+			.send({
+				username: `newuser${Date.now()}`,
+				currentPassword: 'P@ssw0rd123!',
+			})
 			.expect(200);
 		expect(res.body).toHaveProperty('username');
 	});

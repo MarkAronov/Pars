@@ -16,7 +16,9 @@ describe('GET /api/posts and GET /api/posts/:id', () => {
 		const list = await request(app.getHttpServer())
 			.get(`/api/posts?authorId=${user.userId}`)
 			.expect(200);
-		expect(list.body.some((p: { id: string }) => p.id === created.body.id)).toBe(true);
+		expect(
+			list.body.some((p: { id: string }) => p.id === created.body.id),
+		).toBe(true);
 
 		const single = await request(app.getHttpServer())
 			.get(`/api/posts/${created.body.id}`)

@@ -6,12 +6,23 @@
  * was at that moment), so promoting a role after login leaves the cached
  * session stuck on the old role until the cache naturally expires.
  */
+import { COLLECTIONS } from '@pars/db-adapters';
 import { users } from '@pars/db-adapters/schema';
 import { eq } from 'drizzle-orm';
 import request from 'supertest';
-import { getApp, getDrizzle } from './database';
+import { getApp, getDrizzle, getMongo } from './database';
 
-export const setRole = async (userId: string, role: 'user' | 'moderator' | 'admin') => {
+export const setRole = async (
+	userId: string,
+	role: 'user' | 'moderator' | 'admin',
+) => {
+	if (process.env.DATABASE_DRIVER === 'mongo') {
+		const mongo = getMongo();
+		await mongo.db
+			.collection(COLLECTIONS.user)
+			.updateOne({ _id: userId }, { $set: { role } });
+		return;
+	}
 	const drizzle = getDrizzle();
 	await drizzle.db.update(users).set({ role }).where(eq(users.id, userId));
 };

@@ -4,7 +4,7 @@ import { getApp } from '../../database';
 import { signUpAndLogin } from '../../helpers';
 
 describe('GET /api/feed — chronological feed for the authed user', () => {
-	it('includes the user\'s own posts and followed users\' posts, not others\'', async () => {
+	it("includes the user's own posts and followed users' posts, not others'", async () => {
 		const app = await getApp();
 		const viewer = await signUpAndLogin('feedViewer');
 		const followed = await signUpAndLogin('feedFollowed');
@@ -39,9 +39,11 @@ describe('GET /api/feed — chronological feed for the authed user', () => {
 		const ids = feed.body.posts.map((p: { id: string }) => p.id);
 		expect(ids).toContain(ownPost.body.id);
 		expect(ids).toContain(followedPost.body.id);
-		expect(feed.body.posts.every((p: { content: string }) => p.content !== 'Stranger post')).toBe(
-			true,
-		);
+		expect(
+			feed.body.posts.every(
+				(p: { content: string }) => p.content !== 'Stranger post',
+			),
+		).toBe(true);
 	});
 
 	it('rejects an unauthenticated request', async () => {

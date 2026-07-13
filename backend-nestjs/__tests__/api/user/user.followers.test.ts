@@ -17,12 +17,16 @@ describe('GET /api/users/:id/followers and /api/users/:id/following', () => {
 		const followers = await request(app.getHttpServer())
 			.get(`/api/users/${b.userId}/followers`)
 			.expect(200);
-		expect(followers.body.some((u: { id: string }) => u.id === a.userId)).toBe(true);
+		expect(followers.body.some((u: { id: string }) => u.id === a.userId)).toBe(
+			true,
+		);
 
 		const following = await request(app.getHttpServer())
 			.get(`/api/users/${a.userId}/following`)
 			.expect(200);
-		expect(following.body.some((u: { id: string }) => u.id === b.userId)).toBe(true);
+		expect(following.body.some((u: { id: string }) => u.id === b.userId)).toBe(
+			true,
+		);
 	});
 
 	it('returns an empty list for a user with no followers', async () => {

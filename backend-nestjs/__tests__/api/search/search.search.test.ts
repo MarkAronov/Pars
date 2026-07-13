@@ -16,7 +16,9 @@ describe('GET /api/search — full-text search across posts, users, topics', () 
 		const res = await request(app.getHttpServer())
 			.get('/api/search?q=xyzzy&type=posts')
 			.expect(200);
-		expect(res.body.some((p: { content: string }) => p.content.includes('xyzzy'))).toBe(true);
+		expect(
+			res.body.some((p: { content: string }) => p.content.includes('xyzzy')),
+		).toBe(true);
 	});
 
 	it('finds a matching user by display name', async () => {
@@ -33,7 +35,9 @@ describe('GET /api/search — full-text search across posts, users, topics', () 
 		const res = await request(app.getHttpServer())
 			.get('/api/search?q=SearchableDisplayName&type=users')
 			.expect(200);
-		expect(res.body.some((u: { id: string }) => u.id === user.userId)).toBe(true);
+		expect(res.body.some((u: { id: string }) => u.id === user.userId)).toBe(
+			true,
+		);
 	});
 
 	it('finds a matching topic by name', async () => {

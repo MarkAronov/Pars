@@ -1,4 +1,4 @@
-import { Global, Module } from '@nestjs/common';
+import { Global, Module, type Provider } from '@nestjs/common';
 import {
 	FEED_REPOSITORY,
 	FeedService,
@@ -6,6 +6,14 @@ import {
 	MEDIA_REPOSITORY,
 	MEDIA_STORAGE,
 	MediaService,
+	MongoFeedRepository,
+	MongoFollowRepository,
+	MongoMediaRepository,
+	MongoPostRepository,
+	MongoSearchRepository,
+	MongoThreadRepository,
+	MongoTopicRepository,
+	MongoUserRepository,
 	POST_REPOSITORY,
 	PostgresFeedRepository,
 	PostgresFollowRepository,
@@ -29,55 +37,107 @@ import { StorageModule } from '../storage/storage.module';
 import { StorageService } from '../storage/storage.service';
 import { DrizzleModule } from './drizzle.module';
 import { DrizzleService } from './drizzle.service';
+import { MongoModule } from './mongo.module';
+import { MongoService } from './mongo.service';
+
+// Both Postgres and Mongo providers reference their own connection service
+// instance directly (not `.db`) — the connection's `db` property is only
+// assigned inside that service's onModuleInit(), which hasn't run yet when
+// these factories execute, so capturing it eagerly would freeze it at
+// `undefined` for the repository's whole lifetime. Both PostgresXRepository
+// and MongoXRepository read `.db` lazily per-call instead.
+const repositoryProviders: Provider[] =
+	process.env.DATABASE_DRIVER === 'mongo'
+		? [
+				{
+					provide: USER_REPOSITORY,
+					useFactory: (m: MongoService) => new MongoUserRepository(m),
+					inject: [MongoService],
+				},
+				{
+					provide: FOLLOW_REPOSITORY,
+					useFactory: (m: MongoService) => new MongoFollowRepository(m),
+					inject: [MongoService],
+				},
+				{
+					provide: POST_REPOSITORY,
+					useFactory: (m: MongoService) => new MongoPostRepository(m),
+					inject: [MongoService],
+				},
+				{
+					provide: THREAD_REPOSITORY,
+					useFactory: (m: MongoService) => new MongoThreadRepository(m),
+					inject: [MongoService],
+				},
+				{
+					provide: TOPIC_REPOSITORY,
+					useFactory: (m: MongoService) => new MongoTopicRepository(m),
+					inject: [MongoService],
+				},
+				{
+					provide: MEDIA_REPOSITORY,
+					useFactory: (m: MongoService) => new MongoMediaRepository(m),
+					inject: [MongoService],
+				},
+				{
+					provide: SEARCH_REPOSITORY,
+					useFactory: (m: MongoService) => new MongoSearchRepository(m),
+					inject: [MongoService],
+				},
+				{
+					provide: FEED_REPOSITORY,
+					useFactory: (m: MongoService) => new MongoFeedRepository(m),
+					inject: [MongoService],
+				},
+			]
+		: [
+				{
+					provide: USER_REPOSITORY,
+					useFactory: (d: DrizzleService) => new PostgresUserRepository(d),
+					inject: [DrizzleService],
+				},
+				{
+					provide: FOLLOW_REPOSITORY,
+					useFactory: (d: DrizzleService) => new PostgresFollowRepository(d),
+					inject: [DrizzleService],
+				},
+				{
+					provide: POST_REPOSITORY,
+					useFactory: (d: DrizzleService) => new PostgresPostRepository(d),
+					inject: [DrizzleService],
+				},
+				{
+					provide: THREAD_REPOSITORY,
+					useFactory: (d: DrizzleService) => new PostgresThreadRepository(d),
+					inject: [DrizzleService],
+				},
+				{
+					provide: TOPIC_REPOSITORY,
+					useFactory: (d: DrizzleService) => new PostgresTopicRepository(d),
+					inject: [DrizzleService],
+				},
+				{
+					provide: MEDIA_REPOSITORY,
+					useFactory: (d: DrizzleService) => new PostgresMediaRepository(d),
+					inject: [DrizzleService],
+				},
+				{
+					provide: SEARCH_REPOSITORY,
+					useFactory: (d: DrizzleService) => new PostgresSearchRepository(d),
+					inject: [DrizzleService],
+				},
+				{
+					provide: FEED_REPOSITORY,
+					useFactory: (d: DrizzleService) => new PostgresFeedRepository(d),
+					inject: [DrizzleService],
+				},
+			];
 
 @Global()
 @Module({
-	imports: [DrizzleModule, StorageModule],
+	imports: [DrizzleModule, MongoModule, StorageModule],
 	providers: [
-		{
-			provide: USER_REPOSITORY,
-			// Passes the DrizzleService instance itself, not `d.db` — `db` is only
-			// assigned inside DrizzleService.onModuleInit(), which hasn't run yet
-			// when this factory executes, so capturing `d.db` eagerly here would
-			// freeze it at `undefined` for the repository's whole lifetime.
-			useFactory: (d: DrizzleService) => new PostgresUserRepository(d),
-			inject: [DrizzleService],
-		},
-		{
-			provide: FOLLOW_REPOSITORY,
-			useFactory: (d: DrizzleService) => new PostgresFollowRepository(d),
-			inject: [DrizzleService],
-		},
-		{
-			provide: POST_REPOSITORY,
-			useFactory: (d: DrizzleService) => new PostgresPostRepository(d),
-			inject: [DrizzleService],
-		},
-		{
-			provide: THREAD_REPOSITORY,
-			useFactory: (d: DrizzleService) => new PostgresThreadRepository(d),
-			inject: [DrizzleService],
-		},
-		{
-			provide: TOPIC_REPOSITORY,
-			useFactory: (d: DrizzleService) => new PostgresTopicRepository(d),
-			inject: [DrizzleService],
-		},
-		{
-			provide: MEDIA_REPOSITORY,
-			useFactory: (d: DrizzleService) => new PostgresMediaRepository(d),
-			inject: [DrizzleService],
-		},
-		{
-			provide: SEARCH_REPOSITORY,
-			useFactory: (d: DrizzleService) => new PostgresSearchRepository(d),
-			inject: [DrizzleService],
-		},
-		{
-			provide: FEED_REPOSITORY,
-			useFactory: (d: DrizzleService) => new PostgresFeedRepository(d),
-			inject: [DrizzleService],
-		},
+		...repositoryProviders,
 		{ provide: MEDIA_STORAGE, useExisting: StorageService },
 		{
 			provide: UserService,

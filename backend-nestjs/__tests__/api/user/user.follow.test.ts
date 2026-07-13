@@ -67,6 +67,8 @@ describe('POST/DELETE /api/users/:id/follow — follow, unfollow, isFollowing', 
 	it('requires a session', async () => {
 		const app = await getApp();
 		const b = await signUpAndLogin('unauthedFolloweeB');
-		await request(app.getHttpServer()).post(`/api/users/${b.userId}/follow`).expect(401);
+		await request(app.getHttpServer())
+			.post(`/api/users/${b.userId}/follow`)
+			.expect(401);
 	});
 });

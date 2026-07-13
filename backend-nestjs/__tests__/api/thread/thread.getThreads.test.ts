@@ -8,14 +8,20 @@ describe('GET /api/threads and GET /api/threads/:id', () => {
 		const app = await getApp();
 		const topicId = await createTopic('ThreadListTopic');
 		const user = await signUpAndLogin('threadListUser');
-		const threadId = await createThread(user.cookie, topicId, 'Filtered thread');
+		const threadId = await createThread(
+			user.cookie,
+			topicId,
+			'Filtered thread',
+		);
 
 		const list = await request(app.getHttpServer())
 			.get(`/api/threads?topicId=${topicId}`)
 			.expect(200);
 		expect(list.body.some((t: { id: string }) => t.id === threadId)).toBe(true);
 
-		const single = await request(app.getHttpServer()).get(`/api/threads/${threadId}`).expect(200);
+		const single = await request(app.getHttpServer())
+			.get(`/api/threads/${threadId}`)
+			.expect(200);
 		expect(single.body.title).toBe('Filtered thread');
 		expect(single.body._count.posts).toBe(0);
 	});

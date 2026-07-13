@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { describe, expect, it } from 'vitest';
+import { describe, it } from 'vitest';
 import { getApp } from '../../database';
 import { signUpAndLogin } from '../../helpers';
 
@@ -33,6 +33,8 @@ describe('DELETE /api/topics/:id — admin only', () => {
 			.set('Cookie', admin.cookie)
 			.expect(200);
 
-		await request(app.getHttpServer()).get(`/api/topics/${created.body.id}`).expect(404);
+		await request(app.getHttpServer())
+			.get(`/api/topics/${created.body.id}`)
+			.expect(404);
 	});
 });

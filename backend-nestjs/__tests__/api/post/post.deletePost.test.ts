@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { describe, expect, it } from 'vitest';
+import { describe, it } from 'vitest';
 import { getApp } from '../../database';
 import { signUpAndLogin } from '../../helpers';
 
@@ -17,10 +17,12 @@ describe('DELETE /api/posts/:id — owner or admin', () => {
 			.delete(`/api/posts/${created.body.id}`)
 			.set('Cookie', author.cookie)
 			.expect(200);
-		await request(app.getHttpServer()).get(`/api/posts/${created.body.id}`).expect(404);
+		await request(app.getHttpServer())
+			.get(`/api/posts/${created.body.id}`)
+			.expect(404);
 	});
 
-	it('allows an admin to delete someone else\'s post', async () => {
+	it("allows an admin to delete someone else's post", async () => {
 		const app = await getApp();
 		const author = await signUpAndLogin('postDeleteAuthor2');
 		const created = await request(app.getHttpServer())

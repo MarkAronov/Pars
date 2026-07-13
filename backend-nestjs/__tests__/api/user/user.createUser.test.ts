@@ -6,15 +6,27 @@ describe('POST /api/auth/sign-up/email — user registration', () => {
 	it('registers a new user with valid credentials', async () => {
 		const res = await supertest(app.getHttpServer())
 			.post('/api/auth/sign-up/email')
-			.send({ name: 'Test User', email: 'newuser@test.com', password: 'Password123@' });
+			.send({
+				name: 'Test User',
+				email: 'newuser@test.com',
+				password: 'Password123@',
+			});
 		expect(res.status).toBe(200);
 		expect(res.body.user.email).toBe('newuser@test.com');
 	});
 
 	it('rejects duplicate email', async () => {
-		const payload = { name: 'Dup', email: 'dup@test.com', password: 'Password123@' };
-		await supertest(app.getHttpServer()).post('/api/auth/sign-up/email').send(payload);
-		const res = await supertest(app.getHttpServer()).post('/api/auth/sign-up/email').send(payload);
+		const payload = {
+			name: 'Dup',
+			email: 'dup@test.com',
+			password: 'Password123@',
+		};
+		await supertest(app.getHttpServer())
+			.post('/api/auth/sign-up/email')
+			.send(payload);
+		const res = await supertest(app.getHttpServer())
+			.post('/api/auth/sign-up/email')
+			.send(payload);
 		expect(res.status).toBeGreaterThanOrEqual(400);
 	});
 

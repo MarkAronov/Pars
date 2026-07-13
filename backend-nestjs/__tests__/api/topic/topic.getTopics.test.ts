@@ -14,8 +14,12 @@ describe('GET /api/topics and GET /api/topics/:id', () => {
 			.send({ name: 'Gaming' })
 			.expect(201);
 
-		const list = await request(app.getHttpServer()).get('/api/topics').expect(200);
-		expect(list.body.some((t: { id: string }) => t.id === created.body.id)).toBe(true);
+		const list = await request(app.getHttpServer())
+			.get('/api/topics')
+			.expect(200);
+		expect(
+			list.body.some((t: { id: string }) => t.id === created.body.id),
+		).toBe(true);
 
 		const single = await request(app.getHttpServer())
 			.get(`/api/topics/${created.body.id}`)

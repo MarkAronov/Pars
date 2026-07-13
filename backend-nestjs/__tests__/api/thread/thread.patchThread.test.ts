@@ -8,7 +8,11 @@ describe('PATCH /api/threads/:id — edit thread (owner, moderator, or admin)', 
 		const app = await getApp();
 		const topicId = await createTopic('ThreadPatchTopicA');
 		const owner = await signUpAndLogin('threadPatchOwner');
-		const threadId = await createThread(owner.cookie, topicId, 'Original title');
+		const threadId = await createThread(
+			owner.cookie,
+			topicId,
+			'Original title',
+		);
 
 		const res = await request(app.getHttpServer())
 			.patch(`/api/threads/${threadId}`)
@@ -18,11 +22,15 @@ describe('PATCH /api/threads/:id — edit thread (owner, moderator, or admin)', 
 		expect(res.body.title).toBe('Updated title');
 	});
 
-	it('allows a moderator to edit someone else\'s thread', async () => {
+	it("allows a moderator to edit someone else's thread", async () => {
 		const app = await getApp();
 		const topicId = await createTopic('ThreadPatchTopicB');
 		const owner = await signUpAndLogin('threadPatchOwner2');
-		const threadId = await createThread(owner.cookie, topicId, 'Owned by owner2');
+		const threadId = await createThread(
+			owner.cookie,
+			topicId,
+			'Owned by owner2',
+		);
 
 		const mod = await signUpAndLogin('threadPatchMod', 'moderator');
 		await request(app.getHttpServer())
@@ -36,7 +44,11 @@ describe('PATCH /api/threads/:id — edit thread (owner, moderator, or admin)', 
 		const app = await getApp();
 		const topicId = await createTopic('ThreadPatchTopicC');
 		const owner = await signUpAndLogin('threadPatchOwner3');
-		const threadId = await createThread(owner.cookie, topicId, 'Owned by owner3');
+		const threadId = await createThread(
+			owner.cookie,
+			topicId,
+			'Owned by owner3',
+		);
 
 		const stranger = await signUpAndLogin('threadPatchStranger');
 		await request(app.getHttpServer())

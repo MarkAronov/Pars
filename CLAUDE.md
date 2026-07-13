@@ -185,11 +185,16 @@ Husky runs on `git push`:
 
 ## Backend patterns
 
-- **Controllers** are thin — delegate logic to services.
-- **DTOs** use `class-validator` decorators; Drizzle select shapes are used for return types.
+- **Controllers** are thin — delegate logic to services. Services, DTOs, and repository
+  interfaces/implementations live in `packages/db-adapters/`, not in `backend-nestjs/` itself —
+  see the multi-stack restructure section below.
+- Services are plain framework-agnostic classes (no Nest decorators) that depend on a repository
+  *interface*, not a concrete database. `backend-nestjs`'s `DatabaseModule` picks the Postgres or
+  Mongo implementation at DI-wiring time based on `DATABASE_DRIVER`.
 - **Guards:** `SessionAuthGuard` protects authenticated endpoints; `CurrentUser()` decorator provides the authed user.
 - **Roles:** `RolesGuard` + `@Roles('admin' | 'moderator')` for elevated actions.
-- Do not return password hashes or internal fields — project only the fields you need in Drizzle `.select({...})`.
+- Repositories project only the public-facing fields (e.g. `PublicUser`) — never return password
+  hashes or internal fields.
 
 ### API endpoint reference
 
@@ -264,13 +269,17 @@ Run `generate` after any schema change in `packages/db-adapters/src/schema/`, th
 
 ## Environment variables
 
-### Backend (create `backend/.env`)
+### Backend (create `backend-nestjs/.env`)
 ```
-DATABASE_URL=postgresql://user:password@localhost:5432/pars
+DATABASE_DRIVER=postgres                # or 'mongo' — picks the repository implementation
+DATABASE_URL=postgresql://user:password@localhost:5432/pars   # required when DATABASE_DRIVER=postgres
+MONGO_URL=mongodb://localhost:27017/pars_dev?replicaSet=rs0   # required when DATABASE_DRIVER=mongo
 SESSION_SECRET=change-me-in-production-32-chars!!
 CORS_ORIGIN=http://localhost:5173
 REDIS_URL=redis://localhost:6379        # optional — defaults to localhost:6379
 ```
+
+`DATABASE_DRIVER` defaults to Postgres when unset. The Mongo path needs `database-mongodb/`'s docker-compose running first (single-node replica set — required for the Mongo repositories' cascade-delete transactions).
 
 ### Frontend (copy `frontend/env/.env.example` → `frontend/env/.env.development`)
 ```

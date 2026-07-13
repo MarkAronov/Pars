@@ -46,6 +46,8 @@ describe('POST /api/posts/:id/like — toggle like', () => {
 			.send({ content: 'Needs auth to like' })
 			.expect(201);
 
-		await request(app.getHttpServer()).post(`/api/posts/${created.body.id}/like`).expect(401);
+		await request(app.getHttpServer())
+			.post(`/api/posts/${created.body.id}/like`)
+			.expect(401);
 	});
 });

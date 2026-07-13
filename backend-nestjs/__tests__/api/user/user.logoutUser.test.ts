@@ -1,6 +1,6 @@
-import { describe, it, beforeAll } from 'vitest';
-import { getApp } from '../../database';
 import request from 'supertest';
+import { beforeAll, describe, it } from 'vitest';
+import { getApp } from '../../database';
 
 describe('POST /api/auth/sign-out', () => {
 	let app: Awaited<ReturnType<typeof getApp>>;

@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { describe, expect, it } from 'vitest';
+import { describe, it } from 'vitest';
 import { getApp } from '../../database';
 import { createThread, createTopic, signUpAndLogin } from '../../helpers';
 
@@ -14,7 +14,9 @@ describe('DELETE /api/threads/:id — owner or admin', () => {
 			.delete(`/api/threads/${threadId}`)
 			.set('Cookie', owner.cookie)
 			.expect(200);
-		await request(app.getHttpServer()).get(`/api/threads/${threadId}`).expect(404);
+		await request(app.getHttpServer())
+			.get(`/api/threads/${threadId}`)
+			.expect(404);
 	});
 
 	it('rejects a different regular user', async () => {

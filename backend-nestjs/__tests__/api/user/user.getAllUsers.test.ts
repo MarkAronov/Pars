@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeAll } from 'vitest';
-import { getApp } from '../../database';
 import request from 'supertest';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { getApp } from '../../database';
 
 describe('GET /api/users', () => {
 	let app: Awaited<ReturnType<typeof getApp>>;
@@ -11,10 +11,18 @@ describe('GET /api/users', () => {
 		await Promise.all([
 			request(app.getHttpServer())
 				.post('/api/auth/sign-up/email')
-				.send({ email: `list1-${Date.now()}@test.com`, password: 'P@ssw0rd123!', name: 'List One' }),
+				.send({
+					email: `list1-${Date.now()}@test.com`,
+					password: 'P@ssw0rd123!',
+					name: 'List One',
+				}),
 			request(app.getHttpServer())
 				.post('/api/auth/sign-up/email')
-				.send({ email: `list2-${Date.now()}@test.com`, password: 'P@ssw0rd123!', name: 'List Two' }),
+				.send({
+					email: `list2-${Date.now()}@test.com`,
+					password: 'P@ssw0rd123!',
+					name: 'List Two',
+				}),
 		]);
 	});
 

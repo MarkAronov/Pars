@@ -28,7 +28,10 @@ describe('POST /api/topics — create topic (moderator/admin only)', () => {
 
 	it('rejects an unauthenticated request', async () => {
 		const app = await getApp();
-		await request(app.getHttpServer()).post('/api/topics').send({ name: 'NoAuth' }).expect(401);
+		await request(app.getHttpServer())
+			.post('/api/topics')
+			.send({ name: 'NoAuth' })
+			.expect(401);
 	});
 
 	it('rejects an invalid payload', async () => {

@@ -1,13 +1,13 @@
+import { COLLECTIONS } from '@pars/db-adapters';
 import { media } from '@pars/db-adapters/schema';
 import request from 'supertest';
-import { describe, expect, it } from 'vitest';
-import { getApp, getDrizzle } from '../../database';
-import { TINY_PNG, signUpAndLogin } from '../../helpers';
+import { describe, it } from 'vitest';
+import { getApp, getDrizzle, getMongo } from '../../database';
+import { signUpAndLogin, TINY_PNG } from '../../helpers';
 
 describe('DELETE /api/media/:id — delete a media record and its file', () => {
 	it('deletes an uploaded avatar media record', async () => {
 		const app = await getApp();
-		const drizzle = getDrizzle();
 		const user = await signUpAndLogin('mediaDeleteUser');
 
 		await request(app.getHttpServer())
@@ -16,10 +16,16 @@ describe('DELETE /api/media/:id — delete a media record and its file', () => {
 			.attach('file', TINY_PNG, 'avatar.png')
 			.expect(201);
 
-		const [row] = await drizzle.db.select({ id: media.id }).from(media).limit(1);
+		const id =
+			process.env.DATABASE_DRIVER === 'mongo'
+				? ((await getMongo().db.collection(COLLECTIONS.media).findOne({}))
+						?._id as string)
+				: (
+						await getDrizzle().db.select({ id: media.id }).from(media).limit(1)
+					)[0].id;
 
 		await request(app.getHttpServer())
-			.delete(`/api/media/${row.id}`)
+			.delete(`/api/media/${id}`)
 			.set('Cookie', user.cookie)
 			.expect(200);
 	});

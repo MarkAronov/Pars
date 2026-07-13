@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeAll } from 'vitest';
-import { getApp } from '../../database';
 import request from 'supertest';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { getApp } from '../../database';
 
 describe('PATCH /api/users/me (regular)', () => {
 	let app: Awaited<ReturnType<typeof getApp>>;

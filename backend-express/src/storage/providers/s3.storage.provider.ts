@@ -12,8 +12,10 @@ export class S3StorageProvider implements StorageProvider {
 
 	constructor() {
 		this.bucket = process.env.BUCKET_NAME ?? 'pars-media';
+		// Generic name — works with any S3-compatible provider (Tigris, Cloudflare
+		// R2, Backblaze B2, ...), not just the Tigris default this falls back to.
 		this.publicBase =
-			process.env.TIGRIS_PUBLIC_URL ??
+			process.env.S3_PUBLIC_URL ??
 			`https://${this.bucket}.fly.storage.tigris.dev`;
 		this.s3 = new S3Client({
 			region: process.env.AWS_REGION ?? 'auto',

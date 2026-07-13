@@ -287,7 +287,7 @@ Run `generate` after any schema change in `packages/db-adapters/src/schema/`, th
 
 ## Environment variables
 
-### Backend (create `backend-nestjs/.env`)
+### Backend (copy `backend-nestjs/.env.example` → `backend-nestjs/.env`, same for `backend-express/`)
 ```
 DATABASE_DRIVER=postgres                # or 'mongo' — picks the repository implementation
 DATABASE_URL=postgresql://user:password@localhost:5432/pars   # required when DATABASE_DRIVER=postgres
@@ -295,12 +295,28 @@ MONGO_URL=mongodb://localhost:27017/pars_dev?replicaSet=rs0   # required when DA
 SESSION_SECRET=change-me-in-production-32-chars!!
 CORS_ORIGIN=http://localhost:5173
 REDIS_URL=redis://localhost:6379        # optional — defaults to localhost:6379
+STORAGE_DRIVER=local                    # or 's3' — see storage section below
+BUCKET_NAME= / AWS_ENDPOINT_URL_S3= / AWS_ACCESS_KEY_ID= / AWS_SECRET_ACCESS_KEY= / S3_PUBLIC_URL=
 OPENAI_API_KEY=                         # optional — enables real semantic search + post embeddings
 ```
 
-`DATABASE_DRIVER` defaults to Postgres when unset. The Mongo path needs `database-mongodb/`'s docker-compose running first (single-node replica set — required for the Mongo repositories' cascade-delete transactions).
+`DATABASE_DRIVER` defaults to Postgres when unset. The Mongo path needs `database-mongodb/`'s docker-compose running first (single-node replica set — required for the Mongo repositories' cascade-delete transactions), or a real Atlas cluster for a deployed instance (see the free-tier checklist below).
 
 `OPENAI_API_KEY` is optional and costs real money per call when set — leave it empty for local dev/tests. Without it, `embedText()` (`packages/db-adapters/src/search/embeddings.ts`) silently no-ops: posts are created normally, they just don't get an embedding, and `GET /api/search?type=semantic` returns 503. With it set, posts get a real `text-embedding-3-small` embedding on create/edit, and semantic search does a real pgvector cosine-similarity query against the existing `embedding vector(1536)` columns. Postgres only — self-hosted MongoDB has no native vector search, so `type=semantic` returns 501 under `DATABASE_DRIVER=mongo`.
+
+`S3_PUBLIC_URL` (and the other `AWS_*` vars) are generically named — despite the Tigris-flavored default fallback in `s3.storage.provider.ts`, they work with any S3-compatible provider (Cloudflare R2, Backblaze B2, Tigris, real AWS S3) by pointing `AWS_ENDPOINT_URL_S3` at that provider's endpoint.
+
+### Free-tier deployment checklist (nothing here can be created on your behalf)
+
+If deploying `backend-express` (or re-pointing `backend-nestjs`) somewhere that isn't local Docker,
+these need a human to sign up and paste the resulting values into `.env` locally or `fly secrets set`
+for a deployed instance — see each backend's `.env.example` for exactly which var each value goes in:
+
+1. **Postgres** — create a project at [neon.tech](https://neon.tech) (free tier, pgvector built in) → copy its connection string into `DATABASE_URL`.
+2. **MongoDB** (only if using the Mongo driver) — create a free M0 cluster at [MongoDB Atlas](https://www.mongodb.com/atlas) → copy its connection string into `MONGO_URL`.
+3. **Media storage** — create a bucket at [Cloudflare R2](https://developers.cloudflare.com/r2) (free tier, S3-compatible — `S3StorageProvider` needs no code changes) → set `BUCKET_NAME`, `AWS_ENDPOINT_URL_S3`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `S3_PUBLIC_URL`. Or just leave `STORAGE_DRIVER=local` if persistence across deploys doesn't matter yet.
+4. **`OPENAI_API_KEY`** (optional) — only if you want real semantic search rather than the no-op fallback.
+5. **The Fly.io apps themselves** — `backend-nestjs/fly.toml` and `backend-express/fly.toml` are ready, but no Fly app has been created yet for either. Run `fly launch --config backend-nestjs/fly.toml` / `--config backend-express/fly.toml` from the repo root when ready, then `fly secrets set` for each of the values above.
 
 ### Frontend (copy `frontend/env/.env.example` → `frontend/env/.env.development`)
 ```
